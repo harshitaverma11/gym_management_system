@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GymPro Debug Test</title>
+  <style>
+    body { font-family: monospace; background: #0a0c10; color: #e8eaf0; padding: 30px; }
+    button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin: 5px; font-size: 14px; }
+    button:hover { opacity: 0.8; }
+    .result { background: #111318; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin: 10px 0; white-space: pre-wrap; font-size: 13px; }
+    .ok  { border-color: #22c55e; color: #22c55e; }
+    .err { border-color: #ef4444; color: #ef4444; }
+    .info{ border-color: #3b82f6; color: #3b82f6; }
+    h2 { color: #3b82f6; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <h1>🔧 GymPro Debug Test</h1>
+  <p style="color:#6b7280;">Run each test in order. All results appear below.</p>
+
+  <h2>Step 1 — Test Flask is running</h2>
+  <button onclick="testFlask()">Test Flask Connection</button>
+
+  <h2>Step 2 — Test Login</h2>
+  <input id="uname" value="admin" style="padding:8px;border-radius:6px;border:1px solid #333;background:#191d26;color:white;margin:4px;">
+  <input id="upass" value="admin123" type="password" style="padding:8px;border-radius:6px;border:1px solid #333;background:#191d26;color:white;margin:4px;">
+  <input id="urole" value="admin" style="padding:8px;border-radius:6px;border:1px solid #333;background:#191d26;color:white;margin:4px;width:80px;">
+  <button onclick="testLogin()">Test Login</button>
+
+  <h2>Step 3 — Test Members (with X-User header)</h2>
+  <button onclick="testMembers()">Test GET /members</button>
+
+  <h2>Step 4 — Check what's in localStorage</h2>
+  <button onclick="checkStorage()">Check localStorage</button>
+
+  <h2>Step 5 — Manual X-User test</h2>
+  <button onclick="testManualHeader()">Test with manual X-User header</button>
+
+  <h2>Results</h2>
+  <div id="output"></div>
+
+  <script>
+    const API = 'http://127.0.0.1:5000';
+
+    function log(msg, type) {
+      const d = document.getElementById('output');
+      const el = document.createElement('div');
+      el.className = 'result ' + (type || '');
+      el.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
+      d.prepend(el);
+    }
+
+    // ── Step 1: Flask running? ──
+    async function testFlask() {
+      try {
+        const r = await fetch(API + '/');
+        const j = await r.json();
+        log('✅ Flask is running: ' + JSON.stringify(j), 'ok');
+      } catch(e) {
+        log('❌ Flask not reachable: ' + e.message + '\n\nMake sure python app.py is running!', 'err');
+      }
+    }
+
+    // ── Step 2: Login ──
+    async function testLogin() {
+      const username = document.getElementById('uname').value;
+      const password = document.getElementById('upass').value;
+      const role     = document.getElementById('urole').value;
+      try {
+        const r = await fetch(API + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role })
+        });
+        const j = await r.json();
+        if (r.status === 200) {
+          // Save to localStorage
+          localStorage.setItem('gymUser',     JSON.stringify(j.user));
+          localStorage.setItem('currentUser', JSON.stringify(j.user));
+          log('✅ Login SUCCESS! User saved to localStorage.\n' + JSON.stringify(j, null, 2), 'ok');
+        } else {
+          log('❌ Login FAILED (HTTP ' + r.status + '):\n' + JSON.stringify(j, null, 2), 'err');
+        }
+      } catch(e) {
+        log('❌ Login error: ' + e.message, 'err');
+      }
+    }
+
+    // ── Step 3: GET /members with X-User header ──
+    async function testMembers() {
+      const userStr = localStorage.getItem('gymUser');
+      if (!userStr) {
+        log('❌ No user in localStorage. Run Step 2 (Login) first!', 'err');
+        return;
+      }
+      try {
+        const r = await fetch(API + '/members', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User': userStr   // ← THIS is the key header
+          }
+        });
+        const j = await r.json();
+        if (r.status === 200) {
+          log('✅ GET /members SUCCESS! Got ' + j.length + ' members.\nFirst: ' + JSON.stringify(j[0] || 'empty', null, 2), 'ok');
+        } else {
+          log('❌ GET /members FAILED (HTTP ' + r.status + '):\n' + JSON.stringify(j, null, 2), 'err');
+        }
+      } catch(e) {
+        log('❌ Members error: ' + e.message, 'err');
+      }
+    }
+
+    // ── Step 4: Check localStorage ──
+    function checkStorage() {
+      const user = localStorage.getItem('gymUser');
+      if (user) {
+        log('✅ localStorage has gymUser:\n' + JSON.parse(user).username + ' (' + JSON.parse(user).role + ')', 'ok');
+      } else {
+        log('❌ localStorage is EMPTY — no gymUser found.\nThis means login did not save the user, OR script.js cleared it.', 'err');
+      }
+    }
+
+    // ── Step 5: Manual header test ──
+    async function testManualHeader() {
+      const testUser = JSON.stringify({ username: "admin", role: "admin" });
+      try {
+        const r = await fetch(API + '/members', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User': testUser
+          }
+        });
+        const j = await r.json();
+        if (r.status === 200) {
+          log('✅ Manual X-User header WORKS! Got ' + j.length + ' members.\n\nThis confirms routes.py is correct.\nThe issue is script.js not injecting the header automatically.', 'ok');
+        } else {
+          log('❌ Manual X-User FAILED (HTTP ' + r.status + '):\n' + JSON.stringify(j, null, 2) + '\n\nThis means routes.py is NOT the new version. Replace routes.py in your backend/ folder.', 'err');
+        }
+      } catch(e) {
+        log('❌ Error: ' + e.message, 'err');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0c10;--surface:#111318;--surface2:#191d26;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;--accent:#3b82f6;--accent2:#6366f1;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--radius:14px;--sidebar-w:240px;--font-body:'DM Sans',sans-serif;--font-head:'Bebas Neue',sans-serif;--font-mono:'DM Mono',monospace;}
+    [data-theme="light"]{--bg:#f0f2f7;--surface:#fff;--surface2:#f8fafc;--border:rgba(0,0,0,0.08);--text:#1a1f2e;--muted:#94a3b8;}
+    html,body{height:100%;}body{font-family:var(--font-body);background:var(--bg);color:var(--text);display:flex;overflow:hidden;transition:background .3s,color .3s;}
+    a{text-decoration:none;color:inherit;}::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 24px;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:grid;place-items:center;font-size:16px;color:#fff;flex-shrink:0;}
+    .logo-text{font-family:var(--font-head);font-size:22px;letter-spacing:1px;}.logo-text span{color:var(--accent);}
+    .sidebar-section{padding:20px 12px 8px;}.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+    .sidebar a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:500;transition:all .18s;position:relative;}
+    .sidebar a:hover{background:var(--surface2);color:var(--text);}.sidebar a.active{background:rgba(59,130,246,.12);color:var(--accent);}
+    .sidebar a.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .sidebar a i{width:18px;text-align:center;font-size:15px;}
+    .sidebar-footer{margin-top:auto;padding:16px 16px 0;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;}
+    .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;}.user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;padding:8px 12px;border-radius:8px;width:100%;margin-top:6px;font-family:var(--font-body);transition:background .15s;}
+    .logout-btn:hover{background:rgba(239,68,68,.1);}
+    .main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;padding:32px 36px;}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:20px;}
+    .page-title{font-family:var(--font-head);font-size:40px;letter-spacing:1px;line-height:1;}
+    .page-sub{color:var(--muted);font-size:14px;margin-top:6px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .icon-btn{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+
+    /* tabs */
+    .report-tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+    .report-tab{padding:9px 18px;border:1px solid var(--border);background:var(--surface);border-radius:20px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all .15s;}
+    .report-tab:hover{color:var(--text);border-color:var(--accent);}
+    .report-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+    /* summary cards */
+    .summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;animation:fadeUp .4s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+    .sum-val{font-family:var(--font-head);font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;margin-bottom:4px;}
+    .sum-lbl{font-size:12px;color:var(--muted);}
+
+    /* chart */
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:18px;animation:fadeUp .4s .05s ease both;}
+    .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+    .chart-title{font-size:15px;font-weight:600;}
+    canvas{max-height:300px;}
+
+    /* table */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s .1s ease both;}
+    .table-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;}
+    table{width:100%;border-collapse:collapse;}
+    thead tr{border-bottom:1px solid var(--border);}
+    th{padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+    tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--surface2);}
+    td{padding:11px 18px;font-size:13.5px;}
+    .num{font-family:var(--font-mono);font-size:13px;}
+    .money{font-family:var(--font-mono);font-weight:600;color:var(--green);}
+    .empty-state{text-align:center;padding:40px;color:var(--muted);}
+    .empty-state i{font-size:24px;margin-bottom:8px;display:block;opacity:.4;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-dumbbell"></i></div><div class="logo-text">GYM<span>PRO</span></div></div>
+  <div class="sidebar-section"><div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="members.html"><i class="fas fa-users"></i> Members</a>
+    <a href="trainers.html"><i class="fas fa-person"></i> Trainers</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Finance</div>
+    <a href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
+    <a href="plans.html"><i class="fas fa-id-card"></i> Plans</a>
+    <a href="memberships.html"><i class="fas fa-calendar-check"></i> Memberships</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Operations</div>
+    <a href="attendance.html"><i class="fas fa-clipboard-check"></i> Attendance</a>
+    <a href="reports.html" class="active"><i class="fas fa-chart-bar"></i> Reports</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Tools</div>
+    <a href="workouts.html"><i class="fas fa-fire"></i> Workouts</a>
+    <a href="chatbot.html"><i class="fas fa-robot"></i> AI Assistant</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="user-avatar" id="userInitial">A</div><div><div class="user-name" id="sidebarUser">Admin</div><div class="user-role" id="sidebarRole">Administrator</div></div></div>
+    <button class="logout-btn" onclick="doLogout()"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><div class="page-title">REPORTS</div><div class="page-sub">Business analytics and performance insights</div></div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌜</div>
+      <div class="icon-btn" onclick="loadReport(activeTab)" title="Refresh"><i class="fas fa-arrows-rotate"></i></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="report-tabs">
+    <button class="report-tab active" onclick="switchTab('monthly',this)"><i class="fas fa-indian-rupee-sign"></i> Revenue</button>
+    <button class="report-tab" onclick="switchTab('members',this)"><i class="fas fa-users"></i> Members</button>
+    <button class="report-tab" onclick="switchTab('attendance',this)"><i class="fas fa-clipboard-check"></i> Attendance</button>
+    <button class="report-tab" onclick="switchTab('plans',this)"><i class="fas fa-id-card"></i> Plans</button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-row" id="summaryRow">
+    <div class="sum-card"><div class="sum-val" id="sum1">—</div><div class="sum-lbl" id="sum1lbl">Total</div></div>
+    <div class="sum-card"><div class="sum-val" id="sum2">—</div><div class="sum-lbl" id="sum2lbl">This Month</div></div>
+    <div class="sum-card"><div class="sum-val" id="sum3">—</div><div class="sum-lbl" id="sum3lbl">Average</div></div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title" id="chartTitle">Monthly Revenue (Last 12 Months)</div>
+    </div>
+    <canvas id="reportChart"></canvas>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header" id="tableTitle">Revenue Breakdown</div>
+    <div style="overflow-x:auto;"><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
+
+<script>
+  const API = 'http://127.0.0.1:5000';
+  let activeTab = 'monthly';
+  let chart = null;
+
+  function getUser(){try{return JSON.parse(localStorage.getItem('gymUser'))||JSON.parse(localStorage.getItem('currentUser'))||null;}catch(e){return null;}}
+  function apiFetch(path,opts){opts=opts||{};const user=getUser();const headers=Object.assign({},opts.headers||{});if(!headers['Content-Type']&&opts.body)headers['Content-Type']='application/json';if(user)headers['X-User']=JSON.stringify(user);return fetch(API+path,{credentials:'include',method:opts.method||'GET',body:opts.body||undefined,headers});}
+  function showToast(msg,type){const t=document.getElementById('toast');t.querySelector('i').style.color=type==='error'?'var(--red)':'var(--green)';document.getElementById('toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+  function fmtINR(n){n=parseFloat(n)||0;if(n>=100000)return'₹'+(n/100000).toFixed(1)+'L';if(n>=1000)return'₹'+(n/1000).toFixed(1)+'K';return'₹'+n.toFixed(0);}
+
+  function switchTab(type, el){
+    activeTab = type;
+    document.querySelectorAll('.report-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    loadReport(type);
+  }
+
+  function loadReport(type){
+    apiFetch('/reports?type='+type)
+      .then(r=>r.json())
+      .then(res=>renderReport(type, res.data||[]))
+      .catch(err=>showToast('Failed: '+err.message,'error'));
+  }
+
+  function renderReport(type, data){
+    if(chart){chart.destroy();chart=null;}
+    const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+    const gridColor = isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+    const textColor = isDark?'#6b7280':'#94a3b8';
+
+    if(type==='monthly'){
+      document.getElementById('chartTitle').textContent='Monthly Revenue (Last 12 Months)';
+      document.getElementById('tableTitle').textContent='Revenue Breakdown by Month';
+      const reversed=[...data].reverse();
+      const total=data.reduce((s,r)=>s+(parseFloat(r.collected)||0),0);
+      const thisMonth=data[0]?parseFloat(data[0].collected)||0:0;
+      const avg=data.length?total/data.length:0;
+      document.getElementById('sum1').textContent=fmtINR(total);document.getElementById('sum1lbl').textContent='Total Collected (12m)';
+      document.getElementById('sum2').textContent=fmtINR(thisMonth);document.getElementById('sum2lbl').textContent='This Month';
+      document.getElementById('sum3').textContent=fmtINR(avg);document.getElementById('sum3lbl').textContent='Monthly Average';
+      chart=new Chart(document.getElementById('reportChart'),{type:'bar',data:{labels:reversed.map(r=>r.month),datasets:[{label:'Collected',data:reversed.map(r=>parseFloat(r.collected)||0),backgroundColor:'rgba(59,130,246,0.7)',borderColor:'#3b82f6',borderWidth:1,borderRadius:4},{label:'Pending',data:reversed.map(r=>parseFloat(r.pending)||0),backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',borderWidth:1,borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{color:textColor}}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>fmtINR(v)}}}}});
+      document.getElementById('tableHead').innerHTML='<tr><th>Month</th><th>Transactions</th><th>Collected</th><th>Pending</th></tr>';
+      document.getElementById('tableBody').innerHTML=data.length?data.map(r=>`<tr><td>${r.month}</td><td class="num">${r.transactions}</td><td class="money">${fmtINR(r.collected)}</td><td style="color:var(--red);font-family:var(--font-mono);">${fmtINR(r.pending)}</td></tr>`).join(''):'<tr><td colspan="4"><div class="empty-state"><i class="fas fa-chart-bar"></i>No data yet</div></td></tr>';
+    }
+    else if(type==='members'){
+      document.getElementById('chartTitle').textContent='New Members per Month';
+      document.getElementById('tableTitle').textContent='Member Growth by Month';
+      const reversed=[...data].reverse();
+      const totalNew=data.reduce((s,r)=>s+(parseInt(r.new_members)||0),0);
+      document.getElementById('sum1').textContent=totalNew;document.getElementById('sum1lbl').textContent='Total New Members (12m)';
+      document.getElementById('sum2').textContent=data[0]?data[0].new_members||0:0;document.getElementById('sum2lbl').textContent='This Month';
+      document.getElementById('sum3').textContent=data.length?Math.round(totalNew/data.length):0;document.getElementById('sum3lbl').textContent='Monthly Average';
+      chart=new Chart(document.getElementById('reportChart'),{type:'line',data:{labels:reversed.map(r=>r.month),datasets:[{label:'New Members',data:reversed.map(r=>parseInt(r.new_members)||0),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',fill:true,tension:0.4,pointBackgroundColor:'#22c55e'}]},options:{responsive:true,plugins:{legend:{labels:{color:textColor}}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor},beginAtZero:true}}}});
+      document.getElementById('tableHead').innerHTML='<tr><th>Month</th><th>New Members</th><th>Active</th><th>Inactive</th></tr>';
+      document.getElementById('tableBody').innerHTML=data.length?data.map(r=>`<tr><td>${r.month}</td><td class="num" style="color:var(--accent);">${r.new_members}</td><td class="num" style="color:var(--green);">${r.active||0}</td><td class="num" style="color:var(--red);">${r.inactive||0}</td></tr>`).join(''):'<tr><td colspan="4"><div class="empty-state"><i class="fas fa-users"></i>No data yet</div></td></tr>';
+    }
+    else if(type==='attendance'){
+      document.getElementById('chartTitle').textContent='Daily Attendance (Last 30 Days)';
+      document.getElementById('tableTitle').textContent='Attendance Log';
+      const reversed=[...data].reverse();
+      const totalVisits=data.reduce((s,r)=>s+(parseInt(r.total_visits)||0),0);
+      document.getElementById('sum1').textContent=totalVisits;document.getElementById('sum1lbl').textContent='Total Visits (30d)';
+      document.getElementById('sum2').textContent=data[0]?data[0].total_visits||0:0;document.getElementById('sum2lbl').textContent='Today';
+      document.getElementById('sum3').textContent=data.length?Math.round(totalVisits/data.length):0;document.getElementById('sum3lbl').textContent='Daily Average';
+      chart=new Chart(document.getElementById('reportChart'),{type:'bar',data:{labels:reversed.map(r=>r.date),datasets:[{label:'Check-ins',data:reversed.map(r=>parseInt(r.total_visits)||0),backgroundColor:'rgba(234,179,8,0.7)',borderColor:'#eab308',borderWidth:1,borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{color:textColor}}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor},beginAtZero:true}}}});
+      document.getElementById('tableHead').innerHTML='<tr><th>Date</th><th>Total Check-ins</th><th>Unique Members</th></tr>';
+      document.getElementById('tableBody').innerHTML=data.length?data.map(r=>`<tr><td>${r.date}</td><td class="num" style="color:var(--yellow);">${r.total_visits}</td><td class="num" style="color:var(--accent);">${r.unique_members}</td></tr>`).join(''):'<tr><td colspan="3"><div class="empty-state"><i class="fas fa-clipboard-check"></i>No attendance data yet</div></td></tr>';
+    }
+    else if(type==='plans'){
+      document.getElementById('chartTitle').textContent='Plans Performance';
+      document.getElementById('tableTitle').textContent='Plan Sales Summary';
+      const totalRev=data.reduce((s,r)=>s+(parseFloat(r.total_revenue)||0),0);
+      const totalSold=data.reduce((s,r)=>s+(parseInt(r.total_sold)||0),0);
+      document.getElementById('sum1').textContent=fmtINR(totalRev);document.getElementById('sum1lbl').textContent='Total Plan Revenue';
+      document.getElementById('sum2').textContent=totalSold;document.getElementById('sum2lbl').textContent='Total Plans Sold';
+      document.getElementById('sum3').textContent=data.reduce((s,r)=>s+(parseInt(r.currently_active)||0),0);document.getElementById('sum3lbl').textContent='Currently Active';
+      chart=new Chart(document.getElementById('reportChart'),{type:'doughnut',data:{labels:data.map(r=>r.plan_name),datasets:[{data:data.map(r=>parseInt(r.total_sold)||0),backgroundColor:['#3b82f6','#22c55e','#eab308','#ef4444','#6366f1'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:textColor,padding:16}}}}});
+      document.getElementById('tableHead').innerHTML='<tr><th>Plan</th><th>Price</th><th>Total Sold</th><th>Revenue</th><th>Active Now</th></tr>';
+      document.getElementById('tableBody').innerHTML=data.length?data.map(r=>`<tr><td style="font-weight:600;">${r.plan_name}</td><td class="num">₹${parseFloat(r.price).toLocaleString('en-IN')}</td><td class="num" style="color:var(--accent);">${r.total_sold||0}</td><td class="money">${fmtINR(r.total_revenue)}</td><td class="num" style="color:var(--green);">${r.currently_active||0}</td></tr>`).join(''):'<tr><td colspan="5"><div class="empty-state"><i class="fas fa-id-card"></i>No plan data yet</div></td></tr>';
+    }
+  }
+
+  function toggleTheme(){const html=document.documentElement;const dark=html.getAttribute('data-theme')==='dark';html.setAttribute('data-theme',dark?'light':'dark');document.getElementById('themeBtn').textContent=dark?'🌞':'🌜';localStorage.setItem('gymTheme',dark?'light':'dark');loadReport(activeTab);}
+  function doLogout(){apiFetch('/logout',{method:'POST'}).catch(()=>{}).finally(()=>{localStorage.removeItem('gymUser');localStorage.removeItem('currentUser');window.location.href='login.html';});}
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const theme=localStorage.getItem('gymTheme')||'dark';document.documentElement.setAttribute('data-theme',theme);document.getElementById('themeBtn').textContent=theme==='dark'?'🌜':'🌞';
+    const user=getUser();if(!user){window.location.href='login.html';return;}
+    document.getElementById('sidebarUser').textContent=user.username||'User';
+    document.getElementById('userInitial').textContent=(user.username||'A')[0].toUpperCase();
+    document.getElementById('sidebarRole').textContent=(user.role||'').charAt(0).toUpperCase()+(user.role||'').slice(1);
+    loadReport('monthly');
+  });
+</script>
+</body>
+</html>

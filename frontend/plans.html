@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Membership Plans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0c10;--surface:#111318;--surface2:#191d26;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;--accent:#3b82f6;--accent2:#6366f1;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316;--radius:14px;--sidebar-w:240px;--font-body:'DM Sans',sans-serif;--font-head:'Bebas Neue',sans-serif;--font-mono:'DM Mono',monospace;}
+    [data-theme="light"]{--bg:#f0f2f7;--surface:#fff;--surface2:#f8fafc;--border:rgba(0,0,0,0.08);--text:#1a1f2e;--muted:#94a3b8;}
+    html,body{height:100%;}body{font-family:var(--font-body);background:var(--bg);color:var(--text);display:flex;overflow:hidden;transition:background .3s,color .3s;}
+    a{text-decoration:none;color:inherit;}::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 24px;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:grid;place-items:center;font-size:16px;color:#fff;flex-shrink:0;}
+    .logo-text{font-family:var(--font-head);font-size:22px;letter-spacing:1px;}.logo-text span{color:var(--accent);}
+    .sidebar-section{padding:20px 12px 8px;}.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+    .sidebar a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:500;transition:all .18s;position:relative;}
+    .sidebar a:hover{background:var(--surface2);color:var(--text);}.sidebar a.active{background:rgba(59,130,246,.12);color:var(--accent);}
+    .sidebar a.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .sidebar a i{width:18px;text-align:center;font-size:15px;}
+    .sidebar-footer{margin-top:auto;padding:16px 16px 0;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;}
+    .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;}.user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;padding:8px 12px;border-radius:8px;width:100%;margin-top:6px;font-family:var(--font-body);transition:background .15s;}
+    .logout-btn:hover{background:rgba(239,68,68,.1);}
+    .main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;padding:32px 36px;}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;gap:20px;}
+    .page-title{font-family:var(--font-head);font-size:40px;letter-spacing:1px;line-height:1;}
+    .page-sub{color:var(--muted);font-size:14px;margin-top:6px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .icon-btn{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.88;}.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* Plans Grid */
+    .plans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;animation:fadeUp .5s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .plan-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s;position:relative;}
+    .plan-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.3);}
+    .plan-card.popular{border-color:var(--accent);}
+    .popular-badge{position:absolute;top:16px;right:16px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;}
+    .plan-top{height:4px;}
+    .plan-card:nth-child(1) .plan-top{background:linear-gradient(90deg,var(--green),#16a34a);}
+    .plan-card:nth-child(2) .plan-top{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .plan-card:nth-child(3) .plan-top{background:linear-gradient(90deg,var(--yellow),var(--orange));}
+    .plan-card:nth-child(4) .plan-top{background:linear-gradient(90deg,var(--red),#dc2626);}
+    .plan-card:nth-child(5) .plan-top{background:linear-gradient(90deg,var(--accent2),#7c3aed);}
+    .plan-body{padding:24px;}
+    .plan-name{font-family:var(--font-head);font-size:24px;letter-spacing:1px;margin-bottom:4px;}
+    .plan-duration{font-size:13px;color:var(--muted);margin-bottom:18px;}
+    .plan-price{font-family:var(--font-head);font-size:36px;letter-spacing:1px;color:var(--accent);line-height:1;}
+    .plan-price span{font-size:16px;color:var(--muted);font-family:var(--font-body);}
+    .plan-desc{font-size:13px;color:var(--muted);margin:12px 0 16px;line-height:1.5;}
+    .plan-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+    .plan-features li{display:flex;align-items:center;gap:8px;font-size:13px;}
+    .plan-features li i{color:var(--green);font-size:11px;width:14px;}
+    .plan-footer{padding:0 24px 20px;display:flex;gap:8px;}
+    .btn-assign{flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:opacity .15s;}
+    .btn-assign:hover{opacity:.88;}
+    .btn-edit{width:36px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;display:grid;place-items:center;color:var(--muted);cursor:pointer;font-size:13px;transition:all .15s;}
+    .btn-edit:hover{color:var(--text);border-color:var(--accent);}
+    .empty-state{text-align:center;padding:60px;color:var(--muted);grid-column:1/-1;}
+    .empty-state i{font-size:32px;margin-bottom:12px;display:block;opacity:.4;}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:500px;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto;}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+    .modal-title{font-family:var(--font-head);font-size:26px;letter-spacing:1px;}
+    .modal-close{width:32px;height:32px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:14px;}
+    .modal-close:hover{color:var(--red);border-color:var(--red);}
+    .form-group{margin-bottom:16px;}.form-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px;}
+    .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .form-control:focus{border-color:var(--accent);}.form-control::placeholder{color:var(--muted);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--border);}
+    .btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:9px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .15s;}
+    .btn-ghost:hover{border-color:var(--accent);color:var(--text);}
+
+    /* Assign modal extras */
+    .member-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;}
+    .member-select:focus{border-color:var(--accent);}
+    .plan-summary{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:16px;}
+    .plan-summary-title{font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .plan-summary-info{display:flex;justify-content:space-between;align-items:center;}
+    .plan-summary-name{font-weight:700;font-size:15px;}
+    .plan-summary-price{font-family:var(--font-mono);font-size:16px;color:var(--accent);font-weight:700;}
+
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    @media(max-width:520px){.form-row{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-dumbbell"></i></div><div class="logo-text">GYM<span>PRO</span></div></div>
+  <div class="sidebar-section"><div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="members.html"><i class="fas fa-users"></i> Members</a>
+    <a href="trainers.html"><i class="fas fa-person"></i> Trainers</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Finance</div>
+    <a href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
+    <a href="plans.html" class="active"><i class="fas fa-id-card"></i> Plans</a>
+    <a href="memberships.html"><i class="fas fa-calendar-check"></i> Memberships</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Operations</div>
+    <a href="attendance.html"><i class="fas fa-clipboard-check"></i> Attendance</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Tools</div>
+    <a href="workouts.html"><i class="fas fa-fire"></i> Workouts</a>
+    <a href="chatbot.html"><i class="fas fa-robot"></i> AI Assistant</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="user-avatar" id="userInitial">A</div><div><div class="user-name" id="sidebarUser">Admin</div><div class="user-role" id="sidebarRole">Administrator</div></div></div>
+    <button class="logout-btn" onclick="doLogout()"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><div class="page-title">MEMBERSHIP PLANS</div><div class="page-sub">Create and manage gym membership packages</div></div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌜</div>
+      <div class="icon-btn" onclick="loadPlans()" title="Refresh"><i class="fas fa-arrows-rotate"></i></div>
+      <button class="btn-primary admin-only" onclick="openPlanModal(null)"><i class="fas fa-plus"></i> New Plan</button>
+    </div>
+  </div>
+  <div class="plans-grid" id="plansGrid">
+    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading plans…</div>
+  </div>
+</main>
+
+<!-- Create/Edit Plan Modal -->
+<div class="modal-overlay" id="planModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="planModalTitle">NEW PLAN</div><button class="modal-close" onclick="closePlanModal()"><i class="fas fa-times"></i></button></div>
+    <input type="hidden" id="planEditId">
+    <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" id="pName" class="form-control" placeholder="e.g. Monthly Premium"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Duration (days) *</label><input type="number" id="pDays" class="form-control" placeholder="30" min="1"></div>
+      <div class="form-group"><label class="form-label">Price (₹) *</label><input type="number" id="pPrice" class="form-control" placeholder="999" min="0"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input type="text" id="pDesc" class="form-control" placeholder="Brief description"></div>
+    <div class="form-group"><label class="form-label">Features (comma separated)</label><input type="text" id="pFeatures" class="form-control" placeholder="Gym access,Locker,Free WiFi"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closePlanModal()">Cancel</button>
+      <button class="btn-primary" id="planSaveBtn" onclick="savePlan()"><i class="fas fa-save"></i> Save Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Plan Modal -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">ASSIGN PLAN</div><button class="modal-close" onclick="closeAssignModal()"><i class="fas fa-times"></i></button></div>
+    <input type="hidden" id="assignPlanId">
+    <div class="plan-summary" id="assignPlanSummary"></div>
+    <div class="form-group"><label class="form-label">Select Member *</label>
+      <select id="assignMemberId" class="member-select"><option value="">Loading members…</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Start Date</label><input type="date" id="assignStart" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Payment Method</label>
+        <select id="assignMethod" class="form-control"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="bank_transfer">Bank Transfer</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Amount Paid (₹)</label><input type="number" id="assignAmount" class="form-control"></div>
+    <div class="form-group"><label class="form-label">Notes</label><input type="text" id="assignNotes" class="form-control" placeholder="Optional notes"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn-primary" id="assignSaveBtn" onclick="saveAssignment()"><i class="fas fa-check"></i> Assign Plan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
+
+<script>
+  const API = 'http://127.0.0.1:5000';
+  let allPlans = [], allMembers = [];
+
+  function getUser(){try{return JSON.parse(localStorage.getItem('gymUser'))||JSON.parse(localStorage.getItem('currentUser'))||null;}catch(e){return null;}}
+  function apiFetch(path,opts){opts=opts||{};const user=getUser();const headers=Object.assign({},opts.headers||{});if(!headers['Content-Type']&&opts.body)headers['Content-Type']='application/json';if(user)headers['X-User']=JSON.stringify(user);return fetch(API+path,{credentials:'include',method:opts.method||'GET',body:opts.body||undefined,headers});}
+  function showToast(msg,type){const t=document.getElementById('toast');t.querySelector('i').style.color=type==='error'?'var(--red)':'var(--green)';document.getElementById('toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+  function loadPlans(){
+    apiFetch('/plans').then(r=>r.json()).then(data=>{
+      allPlans=data;renderPlans(data);
+    }).catch(()=>showToast('Failed to load plans','error'));
+  }
+
+  function loadMembers(){
+    apiFetch('/members').then(r=>r.json()).then(data=>{
+      allMembers=data;
+      const sel=document.getElementById('assignMemberId');
+      sel.innerHTML='<option value="">Select a member…</option>'+
+        data.map(m=>`<option value="${m.member_id}">${m.name} (#${m.member_id})</option>`).join('');
+    }).catch(()=>{});
+  }
+
+  function renderPlans(plans){
+    const grid=document.getElementById('plansGrid');
+    const role=getUser()?.role;
+    if(!plans.length){grid.innerHTML='<div class="empty-state"><i class="fas fa-id-card"></i>No plans yet. Click <strong>New Plan</strong> to create one.</div>';return;}
+    grid.innerHTML=plans.map((p,i)=>{
+      const features=(p.features||'').split(',').filter(Boolean);
+      const isPopular=p.name.toLowerCase().includes('yearly')||p.name.toLowerCase().includes('annual');
+      return `<div class="plan-card${isPopular?' popular':''}">
+        ${isPopular?'<div class="popular-badge">⭐ POPULAR</div>':''}
+        <div class="plan-top"></div>
+        <div class="plan-body">
+          <div class="plan-name">${p.name}</div>
+          <div class="plan-duration"><i class="fas fa-clock" style="margin-right:5px;color:var(--accent);"></i>${p.duration_days} days</div>
+          <div class="plan-price">₹${parseFloat(p.price).toLocaleString('en-IN')}<span> / plan</span></div>
+          <div class="plan-desc">${p.description||''}</div>
+          <ul class="plan-features">${features.map(f=>`<li><i class="fas fa-check-circle"></i>${f.trim()}</li>`).join('')}</ul>
+        </div>
+        <div class="plan-footer">
+          <button class="btn-assign" onclick="openAssignModal(${p.plan_id})"><i class="fas fa-user-plus"></i> Assign to Member</button>
+          ${role==='admin'?`<button class="btn-edit" onclick="openPlanModal(${p.plan_id})" title="Edit"><i class="fas fa-pen"></i></button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openPlanModal(id){
+    const p=id?allPlans.find(x=>x.plan_id===id):null;
+    document.getElementById('planModalTitle').textContent=p?'EDIT PLAN':'NEW PLAN';
+    document.getElementById('planEditId').value=p?p.plan_id:'';
+    document.getElementById('pName').value=p?p.name:'';
+    document.getElementById('pDays').value=p?p.duration_days:'';
+    document.getElementById('pPrice').value=p?p.price:'';
+    document.getElementById('pDesc').value=p?p.description:'';
+    document.getElementById('pFeatures').value=p?p.features:'';
+    document.getElementById('planModal').classList.add('open');
+  }
+  function closePlanModal(){document.getElementById('planModal').classList.remove('open');}
+
+  function savePlan(){
+    const id=document.getElementById('planEditId').value;
+    const payload={name:document.getElementById('pName').value.trim(),duration_days:parseInt(document.getElementById('pDays').value),price:parseFloat(document.getElementById('pPrice').value),description:document.getElementById('pDesc').value,features:document.getElementById('pFeatures').value};
+    if(!payload.name||!payload.duration_days||!payload.price){showToast('Name, duration and price required','error');return;}
+    const btn=document.getElementById('planSaveBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving…';
+    apiFetch(id?'/plans/'+id:'/plans',{method:id?'PUT':'POST',body:JSON.stringify(payload)})
+      .then(r=>{if(!r.ok)return r.json().then(e=>{throw new Error(e.error);});return r.json();})
+      .then(()=>{closePlanModal();loadPlans();showToast(id?'Plan updated!':'Plan created!');})
+      .catch(e=>showToast(e.message,'error'))
+      .finally(()=>{btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Save Plan';});
+  }
+
+  function openAssignModal(planId){
+    const p=allPlans.find(x=>x.plan_id===planId);
+    if(!p)return;
+    document.getElementById('assignPlanId').value=planId;
+    document.getElementById('assignPlanSummary').innerHTML=`<div class="plan-summary-title">Selected Plan</div><div class="plan-summary-info"><span class="plan-summary-name">${p.name} (${p.duration_days} days)</span><span class="plan-summary-price">₹${parseFloat(p.price).toLocaleString('en-IN')}</span></div>`;
+    document.getElementById('assignAmount').value=p.price;
+    document.getElementById('assignStart').value=new Date().toISOString().split('T')[0];
+    document.getElementById('assignNotes').value='';
+    loadMembers();
+    document.getElementById('assignModal').classList.add('open');
+  }
+  function closeAssignModal(){document.getElementById('assignModal').classList.remove('open');}
+
+  function saveAssignment(){
+    const planId=document.getElementById('assignPlanId').value;
+    const memberId=document.getElementById('assignMemberId').value;
+    if(!memberId){showToast('Please select a member','error');return;}
+    const payload={plan_id:parseInt(planId),member_id:parseInt(memberId),start_date:document.getElementById('assignStart').value,payment_method:document.getElementById('assignMethod').value,paid_amount:parseFloat(document.getElementById('assignAmount').value)||0,notes:document.getElementById('assignNotes').value};
+    const btn=document.getElementById('assignSaveBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Assigning…';
+    apiFetch('/memberships',{method:'POST',body:JSON.stringify(payload)})
+      .then(r=>{if(!r.ok)return r.json().then(e=>{throw new Error(e.error);});return r.json();})
+      .then(d=>{closeAssignModal();showToast('Plan assigned! Expires: '+d.end_date);})
+      .catch(e=>showToast(e.message||'Assignment failed','error'))
+      .finally(()=>{btn.disabled=false;btn.innerHTML='<i class="fas fa-check"></i> Assign Plan';});
+  }
+
+  function toggleTheme(){const html=document.documentElement;const dark=html.getAttribute('data-theme')==='dark';html.setAttribute('data-theme',dark?'light':'dark');document.getElementById('themeBtn').textContent=dark?'🌞':'🌜';localStorage.setItem('gymTheme',dark?'light':'dark');}
+  function doLogout(){apiFetch('/logout',{method:'POST'}).catch(()=>{}).finally(()=>{localStorage.removeItem('gymUser');localStorage.removeItem('currentUser');window.location.href='login.html';});}
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const theme=localStorage.getItem('gymTheme')||'dark';document.documentElement.setAttribute('data-theme',theme);document.getElementById('themeBtn').textContent=theme==='dark'?'🌜':'🌞';
+    const user=getUser();if(!user){window.location.href='login.html';return;}
+    document.getElementById('sidebarUser').textContent=user.username||'User';
+    document.getElementById('userInitial').textContent=(user.username||'A')[0].toUpperCase();
+    document.getElementById('sidebarRole').textContent=(user.role||'').charAt(0).toUpperCase()+(user.role||'').slice(1);
+    if(user.role!=='admin')document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
+    [document.getElementById('planModal'),document.getElementById('assignModal')].forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+    loadPlans();
+  });
+</script>
+</body>
+</html>

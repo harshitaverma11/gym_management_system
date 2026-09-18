@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Attendance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0c10;--surface:#111318;--surface2:#191d26;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;--accent:#3b82f6;--accent2:#6366f1;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--radius:14px;--sidebar-w:240px;--font-body:'DM Sans',sans-serif;--font-head:'Bebas Neue',sans-serif;--font-mono:'DM Mono',monospace;}
+    [data-theme="light"]{--bg:#f0f2f7;--surface:#fff;--surface2:#f8fafc;--border:rgba(0,0,0,0.08);--text:#1a1f2e;--muted:#94a3b8;}
+    html,body{height:100%;}body{font-family:var(--font-body);background:var(--bg);color:var(--text);display:flex;overflow:hidden;transition:background .3s,color .3s;}
+    a{text-decoration:none;color:inherit;}::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 24px;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:grid;place-items:center;font-size:16px;color:#fff;flex-shrink:0;}
+    .logo-text{font-family:var(--font-head);font-size:22px;letter-spacing:1px;}.logo-text span{color:var(--accent);}
+    .sidebar-section{padding:20px 12px 8px;}.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+    .sidebar a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:500;transition:all .18s;position:relative;}
+    .sidebar a:hover{background:var(--surface2);color:var(--text);}.sidebar a.active{background:rgba(59,130,246,.12);color:var(--accent);}
+    .sidebar a.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .sidebar a i{width:18px;text-align:center;font-size:15px;}
+    .sidebar-footer{margin-top:auto;padding:16px 16px 0;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;}
+    .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;}.user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;padding:8px 12px;border-radius:8px;width:100%;margin-top:6px;font-family:var(--font-body);transition:background .15s;}
+    .logout-btn:hover{background:rgba(239,68,68,.1);}
+    .main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;padding:32px 36px;}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:20px;}
+    .page-title{font-family:var(--font-head);font-size:40px;letter-spacing:1px;line-height:1;}
+    .page-sub{color:var(--muted);font-size:14px;margin-top:6px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .icon-btn{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.88;}.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* layout */
+    .content-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;}
+
+    /* mark attendance panel */
+    .mark-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;animation:fadeUp .4s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .mark-title{font-family:var(--font-head);font-size:22px;letter-spacing:1px;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+    .mark-title i{color:var(--green);}
+    .form-group{margin-bottom:16px;}
+    .form-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px;}
+    .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .form-control:focus{border-color:var(--accent);}.form-control::placeholder{color:var(--muted);}
+    .member-found{font-size:13px;margin-top:6px;padding:8px 12px;border-radius:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:var(--green);display:none;}
+    .member-found.show{display:block;}
+    .btn-checkin{width:100%;padding:13px;background:linear-gradient(135deg,var(--green),#16a34a);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--font-body);cursor:pointer;transition:opacity .15s;margin-top:4px;}
+    .btn-checkin:hover{opacity:.9;}.btn-checkin:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* today stats */
+    .today-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .today-stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+    .today-stat-val{font-family:var(--font-head);font-size:28px;color:var(--green);letter-spacing:1px;}
+    .today-stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+
+    /* table */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s .05s ease both;}
+    .card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+    .card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;}
+    .card-title i{color:var(--accent);}
+    .date-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;}
+    .date-input:focus{border-color:var(--accent);}
+    table{width:100%;border-collapse:collapse;}
+    thead tr{border-bottom:1px solid var(--border);}
+    th{padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+    tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--surface2);}
+    td{padding:12px 18px;font-size:13.5px;vertical-align:middle;}
+    .mini-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+    .member-cell{display:flex;align-items:center;gap:8px;}
+    .time-badge{font-family:var(--font-mono);font-size:12px;background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:6px;}
+    .act-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--muted);font-size:12px;cursor:pointer;display:grid;place-items:center;transition:all .15s;}
+    .act-btn:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
+    .empty-state{text-align:center;padding:40px;color:var(--muted);}
+    .empty-state i{font-size:24px;margin-bottom:8px;display:block;opacity:.4;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    @media(max-width:1000px){.content-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-dumbbell"></i></div><div class="logo-text">GYM<span>PRO</span></div></div>
+  <div class="sidebar-section"><div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="members.html"><i class="fas fa-users"></i> Members</a>
+    <a href="trainers.html"><i class="fas fa-person"></i> Trainers</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Finance</div>
+    <a href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
+    <a href="plans.html"><i class="fas fa-id-card"></i> Plans</a>
+    <a href="memberships.html"><i class="fas fa-calendar-check"></i> Memberships</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Operations</div>
+    <a href="attendance.html" class="active"><i class="fas fa-clipboard-check"></i> Attendance</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Tools</div>
+    <a href="workouts.html"><i class="fas fa-fire"></i> Workouts</a>
+    <a href="chatbot.html"><i class="fas fa-robot"></i> AI Assistant</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="user-avatar" id="userInitial">A</div><div><div class="user-name" id="sidebarUser">Admin</div><div class="user-role" id="sidebarRole">Administrator</div></div></div>
+    <button class="logout-btn" onclick="doLogout()"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><div class="page-title">ATTENDANCE</div><div class="page-sub">Track daily member check-ins</div></div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌜</div>
+      <div class="icon-btn" onclick="loadToday()" title="Refresh"><i class="fas fa-arrows-rotate"></i></div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+
+    <!-- Mark Attendance -->
+    <div>
+      <div class="mark-card">
+        <div class="mark-title"><i class="fas fa-circle-check"></i> Mark Check-In</div>
+        <div class="today-stats">
+          <div class="today-stat"><div class="today-stat-val" id="todayCount">0</div><div class="today-stat-lbl">Check-ins Today</div></div>
+          <div class="today-stat"><div class="today-stat-val" id="todayUnique">0</div><div class="today-stat-lbl">Unique Members</div></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Member ID</label>
+          <input type="number" id="markMemberId" class="form-control" placeholder="Enter member ID" min="1" oninput="lookupMarkMember()">
+          <div class="member-found" id="memberFound"><i class="fas fa-check-circle" style="margin-right:6px;"></i><span id="memberFoundName"></span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <input type="text" id="markNotes" class="form-control" placeholder="e.g. Morning session">
+        </div>
+        <button class="btn-checkin" id="checkinBtn" onclick="markCheckin()">
+          <i class="fas fa-sign-in-alt"></i> Mark Check-In
+        </button>
+      </div>
+    </div>
+
+    <!-- Today's Attendance Table -->
+    <div class="table-card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-clipboard-list"></i> Attendance Log</div>
+        <input type="date" id="dateFilter" class="date-input" onchange="loadByDate()">
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Member</th><th>Check-In</th><th>Check-Out</th><th>Duration</th><th>Notes</th><th></th>
+          </tr></thead>
+          <tbody id="attendanceBody">
+            <tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
+
+<script>
+  const API = 'http://127.0.0.1:5000';
+  let allMembers = [];
+
+  function getUser(){try{return JSON.parse(localStorage.getItem('gymUser'))||JSON.parse(localStorage.getItem('currentUser'))||null;}catch(e){return null;}}
+  function apiFetch(path,opts){opts=opts||{};const user=getUser();const headers=Object.assign({},opts.headers||{});if(!headers['Content-Type']&&opts.body)headers['Content-Type']='application/json';if(user)headers['X-User']=JSON.stringify(user);return fetch(API+path,{credentials:'include',method:opts.method||'GET',body:opts.body||undefined,headers});}
+  function showToast(msg,type){const t=document.getElementById('toast');t.querySelector('i').style.color=type==='error'?'var(--red)':'var(--green)';document.getElementById('toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+  function fmtTime(dt){if(!dt)return'—';const d=new Date(dt);if(isNaN(d))return dt;return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
+  function duration(ci,co){if(!ci||!co)return'—';const diff=Math.round((new Date(co)-new Date(ci))/60000);if(diff<60)return diff+'m';return Math.floor(diff/60)+'h '+(diff%60)+'m';}
+
+  function loadMembers(){
+    apiFetch('/members').then(r=>r.json()).then(data=>{allMembers=data;}).catch(()=>{});
+  }
+
+  function lookupMarkMember(){
+    const id=parseInt(document.getElementById('markMemberId').value);
+    const found=document.getElementById('memberFound');
+    const name=document.getElementById('memberFoundName');
+    if(!id){found.classList.remove('show');return;}
+    const m=allMembers.find(x=>x.member_id===id);
+    if(m){name.textContent=m.name+' ('+( m.status||'active')+')';found.classList.add('show');}
+    else{found.classList.remove('show');}
+  }
+
+  function markCheckin(){
+    const memberId=document.getElementById('markMemberId').value;
+    if(!memberId){showToast('Enter a member ID','error');return;}
+    const btn=document.getElementById('checkinBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Marking…';
+    apiFetch('/attendance',{method:'POST',body:JSON.stringify({member_id:parseInt(memberId),notes:document.getElementById('markNotes').value||''})})
+      .then(r=>{if(!r.ok)return r.json().then(e=>{throw new Error(e.error);});return r.json();})
+      .then(()=>{document.getElementById('markMemberId').value='';document.getElementById('markNotes').value='';document.getElementById('memberFound').classList.remove('show');loadToday();showToast('Check-in marked ✓');})
+      .catch(e=>showToast(e.message||'Failed','error'))
+      .finally(()=>{btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Mark Check-In';});
+  }
+
+  function loadToday(){
+    apiFetch('/attendance/today').then(r=>r.json()).then(data=>{
+      document.getElementById('todayCount').textContent=data.length;
+      const unique=new Set(data.map(a=>a.member_id)).size;
+      document.getElementById('todayUnique').textContent=unique;
+      renderTable(data);
+    }).catch(err=>showToast('Failed: '+err.message,'error'));
+  }
+
+  function loadByDate(){
+    const date=document.getElementById('dateFilter').value;
+    if(!date){loadToday();return;}
+    apiFetch('/attendance?date='+date).then(r=>r.json()).then(renderTable).catch(()=>{});
+  }
+
+  function renderTable(data){
+    const tbody=document.getElementById('attendanceBody');
+    if(!data.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-clipboard-check"></i>No attendance records for this date.</div></td></tr>';return;}
+    tbody.innerHTML=data.map(a=>{
+      const name=a.member_name||'Unknown';
+      const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const dur=duration(a.check_in,a.check_out);
+      return `<tr>
+        <td><div class="member-cell"><div class="mini-avatar">${initials}</div><div><div style="font-weight:600;">${name}</div><div style="font-size:11px;color:var(--muted);">#${a.member_id}</div></div></div></td>
+        <td><span class="time-badge" style="color:var(--green);">${fmtTime(a.check_in)}</span></td>
+        <td>${a.check_out?`<span class="time-badge" style="color:var(--red);">${fmtTime(a.check_out)}</span>`:'<span style="color:var(--muted);font-size:12px;">Still in</span>'}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${dur}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${a.notes||'—'}</td>
+        <td>${!a.check_out?`<button class="act-btn" title="Mark Check-Out" onclick="markCheckout(${a.attendance_id})"><i class="fas fa-sign-out-alt"></i></button>`:''}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function markCheckout(id){
+    apiFetch('/attendance/'+id+'/checkout',{method:'PUT'})
+      .then(r=>{if(!r.ok)throw new Error();return r.json();})
+      .then(()=>{loadToday();showToast('Checked out ✓');})
+      .catch(()=>showToast('Failed','error'));
+  }
+
+  function toggleTheme(){const html=document.documentElement;const dark=html.getAttribute('data-theme')==='dark';html.setAttribute('data-theme',dark?'light':'dark');document.getElementById('themeBtn').textContent=dark?'🌞':'🌜';localStorage.setItem('gymTheme',dark?'light':'dark');}
+  function doLogout(){apiFetch('/logout',{method:'POST'}).catch(()=>{}).finally(()=>{localStorage.removeItem('gymUser');localStorage.removeItem('currentUser');window.location.href='login.html';});}
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const theme=localStorage.getItem('gymTheme')||'dark';document.documentElement.setAttribute('data-theme',theme);document.getElementById('themeBtn').textContent=theme==='dark'?'🌜':'🌞';
+    document.getElementById('dateFilter').value=new Date().toISOString().split('T')[0];
+    const user=getUser();if(!user){window.location.href='login.html';return;}
+    document.getElementById('sidebarUser').textContent=user.username||'User';
+    document.getElementById('userInitial').textContent=(user.username||'A')[0].toUpperCase();
+    document.getElementById('sidebarRole').textContent=(user.role||'').charAt(0).toUpperCase()+(user.role||'').slice(1);
+    loadMembers();loadToday();
+  });
+</script>
+</body>
+</html>

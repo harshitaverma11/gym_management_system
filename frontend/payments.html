@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Payments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0c10;--surface:#111318;--surface2:#191d26;
+      --border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;
+      --accent:#3b82f6;--accent2:#6366f1;--green:#22c55e;
+      --yellow:#eab308;--red:#ef4444;--radius:14px;--sidebar-w:240px;
+      --font-body:'DM Sans',sans-serif;--font-head:'Bebas Neue',sans-serif;
+      --font-mono:'DM Mono',monospace;
+    }
+    [data-theme="light"]{--bg:#f0f2f7;--surface:#fff;--surface2:#f8fafc;--border:rgba(0,0,0,0.08);--text:#1a1f2e;--muted:#94a3b8;}
+    html,body{height:100%;}
+    body{font-family:var(--font-body);background:var(--bg);color:var(--text);display:flex;overflow:hidden;transition:background .3s,color .3s;}
+    a{text-decoration:none;color:inherit;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+
+    /* ── SIDEBAR ── */
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 24px;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:grid;place-items:center;font-size:16px;color:#fff;flex-shrink:0;}
+    .logo-text{font-family:var(--font-head);font-size:22px;letter-spacing:1px;}.logo-text span{color:var(--accent);}
+    .sidebar-section{padding:20px 12px 8px;}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+    .sidebar a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:500;transition:all .18s;position:relative;}
+    .sidebar a:hover{background:var(--surface2);color:var(--text);}
+    .sidebar a.active{background:rgba(59,130,246,.12);color:var(--accent);}
+    .sidebar a.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .sidebar a i{width:18px;text-align:center;font-size:15px;}
+    .sidebar-footer{margin-top:auto;padding:16px 16px 0;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;}
+    .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;}.user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;padding:8px 12px;border-radius:8px;width:100%;margin-top:6px;font-family:var(--font-body);transition:background .15s;}
+    .logout-btn:hover{background:rgba(239,68,68,.1);}
+
+    /* ── MAIN ── */
+    .main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;padding:32px 36px;}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:20px;}
+    .page-title{font-family:var(--font-head);font-size:40px;letter-spacing:1px;line-height:1;}
+    .page-sub{color:var(--muted);font-size:14px;margin-top:6px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .icon-btn{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.88;}.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* ── STAT CARDS ── */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;animation:fadeUp .4s ease both;transition:transform .2s;}
+    .stat-card:hover{transform:translateY(-2px);}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .stat-card.green::before{background:linear-gradient(90deg,var(--green),#16a34a);}
+    .stat-card.blue::before{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .stat-card.yellow::before{background:linear-gradient(90deg,var(--yellow),#d97706);}
+    .stat-card.red::before{background:linear-gradient(90deg,var(--red),#dc2626);}
+    .stat-icon{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:15px;margin-bottom:12px;}
+    .green .stat-icon{background:rgba(34,197,94,.15);color:var(--green);}
+    .blue  .stat-icon{background:rgba(59,130,246,.15);color:var(--accent);}
+    .yellow .stat-icon{background:rgba(234,179,8,.15);color:var(--yellow);}
+    .red   .stat-icon{background:rgba(239,68,68,.15);color:var(--red);}
+    .stat-val{font-family:var(--font-head);font-size:28px;letter-spacing:1px;line-height:1;margin-bottom:3px;}
+    .stat-lbl{font-size:12px;color:var(--muted);font-weight:500;}
+
+    /* ── TOOLBAR ── */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .search-wrap{position:relative;flex:1;min-width:200px;}
+    .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+    .search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px 9px 34px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .search-input::placeholder{color:var(--muted);}.search-input:focus{border-color:var(--accent);}
+    .filter-select{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 14px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;cursor:pointer;}
+
+    /* ── TABLE ── */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s .1s ease both;}
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;}
+    thead tr{border-bottom:1px solid var(--border);}
+    th{padding:11px 20px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+    tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--surface2);}
+    td{padding:13px 20px;font-size:13.5px;vertical-align:middle;}
+    .member-name{font-weight:600;font-size:14px;}
+    .member-id{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:2px;}
+    .amount-cell{font-family:var(--font-mono);font-weight:700;font-size:15px;}
+    .amount-paid{color:var(--green);}.amount-due{color:var(--red);}.amount-pending{color:var(--yellow);}
+    .status-pill{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;}
+    .pill-paid{background:rgba(34,197,94,.12);color:var(--green);}
+    .pill-pending{background:rgba(234,179,8,.12);color:var(--yellow);}
+    .pill-due{background:rgba(239,68,68,.12);color:var(--red);}
+    .method-badge{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;font-family:var(--font-mono);text-transform:uppercase;}
+    .action-btns{display:flex;gap:6px;}
+    .act-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--muted);font-size:12px;cursor:pointer;display:grid;place-items:center;transition:all .15s;}
+    .act-btn:hover{background:var(--surface2);color:var(--accent);border-color:var(--accent);}
+    .act-btn.success:hover{color:var(--green);border-color:var(--green);}
+    .act-btn.danger:hover{color:var(--red);border-color:var(--red);}
+    .empty-state{text-align:center;padding:52px;color:var(--muted);}
+    .empty-state i{font-size:32px;margin-bottom:12px;display:block;opacity:.4;}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:520px;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto;}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+    .modal-title{font-family:var(--font-head);font-size:26px;letter-spacing:1px;}
+    .modal-close{width:32px;height:32px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s;}
+    .modal-close:hover{color:var(--red);border-color:var(--red);}
+    .form-group{margin-bottom:16px;}
+    .form-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px;}
+    .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .form-control::placeholder{color:var(--muted);}.form-control:focus{border-color:var(--accent);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
+    .btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:9px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .15s;}
+    .btn-ghost:hover{border-color:var(--accent);color:var(--text);}
+    .member-hint{font-size:11px;color:var(--muted);margin-top:4px;}
+    .member-hint span{color:var(--accent);font-weight:600;}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+
+    @media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr;}}
+    @media(max-width:520px){.stats-row{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="fas fa-dumbbell"></i></div>
+    <div class="logo-text">GYM<span>PRO</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Main</div>
+    <a href="dashboard.html" data-role="admin,trainer,member"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="members.html"   data-role="admin,trainer"><i class="fas fa-users"></i> Members</a>
+    <a href="trainers.html"  data-role="admin,trainer"><i class="fas fa-person"></i> Trainers</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finance</div>
+    <a href="payments.html" class="active" data-role="admin,trainer"><i class="fas fa-credit-card"></i> Payments</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Tools</div>
+    <a href="workouts.html" data-role="admin,trainer,member"><i class="fas fa-fire"></i> Workouts</a>
+    <a href="chatbot.html"  data-role="admin,trainer,member"><i class="fas fa-robot"></i> AI Assistant</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userInitial">A</div>
+      <div>
+        <div class="user-name" id="sidebarUser">Admin</div>
+        <div class="user-role" id="sidebarRole">Administrator</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">
+      <i class="fas fa-arrow-right-from-bracket"></i> Log out
+    </button>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">PAYMENTS</div>
+      <div class="page-sub">Track revenue, dues and billing records</div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌜</div>
+      <div class="icon-btn" onclick="loadPayments()" title="Refresh"><i class="fas fa-arrows-rotate"></i></div>
+      <button class="btn-primary admin-only" id="addPayBtn" onclick="openModal(null)">
+        <i class="fas fa-plus"></i> Record Payment
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card green">
+      <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+      <div class="stat-val" id="statPaid">₹0</div>
+      <div class="stat-lbl">Total Collected</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+      <div class="stat-val" id="statDue">₹0</div>
+      <div class="stat-lbl">Due / Pending</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+      <div class="stat-val" id="statCount">0</div>
+      <div class="stat-lbl">Total Records</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-icon"><i class="fas fa-calendar-days"></i></div>
+      <div class="stat-val" id="statMonth">₹0</div>
+      <div class="stat-lbl">This Month</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="fas fa-search"></i>
+      <input class="search-input" id="searchInput"
+        placeholder="Search by member name or ID…" oninput="filterTable()">
+    </div>
+    <select class="filter-select" id="statusFilter" onchange="filterTable()">
+      <option value="">All Status</option>
+      <option value="paid">Paid</option>
+      <option value="pending">Pending</option>
+      <option value="due">Due</option>
+    </select>
+    <select class="filter-select" id="methodFilter" onchange="filterTable()">
+      <option value="">All Methods</option>
+      <option value="cash">Cash</option>
+      <option value="upi">UPI</option>
+      <option value="card">Card</option>
+      <option value="bank_transfer">Bank Transfer</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="paymentsBody">
+          <tr><td colspan="6">
+            <div class="empty-state">
+              <i class="fas fa-spinner fa-spin"></i>
+              Loading payments…
+            </div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">RECORD PAYMENT</div>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <input type="hidden" id="editId">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Member ID *</label>
+        <input type="number" id="fMemberId" class="form-control"
+          placeholder="Enter member ID" min="1" oninput="lookupMember()">
+        <div class="member-hint" id="memberHint">Enter the member's ID number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₹) *</label>
+        <input type="number" id="fAmount" class="form-control"
+          placeholder="e.g. 2500" min="1" step="1">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select id="fMethod" class="form-control">
+          <option value="cash">Cash</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+          <option value="bank_transfer">Bank Transfer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="fStatus" class="form-control">
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="due">Due</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Payment Date</label>
+      <input type="date" id="fDate" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input type="text" id="fNotes" class="form-control"
+        placeholder="e.g. Monthly membership fee">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button class="btn-primary" id="saveBtn" onclick="savePayment()">
+        <i class="fas fa-save"></i> Save Payment
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="fas fa-check-circle" style="color:var(--green);"></i>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+  const API = 'http://127.0.0.1:5000';
+  let allPayments = [];
+  let allMembers  = [];   // cached for member lookup
+
+  /* ── Auth ── */
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem('gymUser'))
+          || JSON.parse(localStorage.getItem('currentUser'))
+          || null;
+    } catch(e) { return null; }
+  }
+
+  /* ── apiFetch: always sends X-User header ── */
+  function apiFetch(path, opts) {
+    opts = opts || {};
+    const user    = getUser();
+    const headers = Object.assign({}, opts.headers || {});
+    if (!headers['Content-Type'] && opts.body) headers['Content-Type'] = 'application/json';
+    if (user) headers['X-User'] = JSON.stringify(user);
+    return fetch(API + path, {
+      credentials: 'include',
+      method:  opts.method || 'GET',
+      body:    opts.body   || undefined,
+      headers: headers,
+    });
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, type) {
+    const t    = document.getElementById('toast');
+    const icon = t.querySelector('i');
+    icon.className   = type === 'error' ? 'fas fa-circle-xmark' : 'fas fa-check-circle';
+    icon.style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── Formatters ── */
+  function fmtINR(n) {
+    n = parseFloat(n) || 0;
+    if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+    if (n >= 1000)   return '₹' + (n/1000).toFixed(1) + 'K';
+    return '₹' + n.toFixed(0);
+  }
+  function fmtDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  }
+
+  /* ── Load members (for lookup) ── */
+  function loadMembersCache() {
+    apiFetch('/members')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { allMembers = data; })
+      .catch(() => {});
+  }
+
+  /* ── Load payments ── */
+  function loadPayments() {
+    document.getElementById('paymentsBody').innerHTML =
+      '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading…</div></td></tr>';
+
+    apiFetch('/payments')
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        allPayments = data;
+        updateStats(data);
+        renderTable(data);
+      })
+      .catch(err => {
+        document.getElementById('paymentsBody').innerHTML =
+          `<tr><td colspan="6"><div class="empty-state">
+            <i class="fas fa-circle-xmark"></i>
+            Failed to load: ${err.message}
+          </div></td></tr>`;
+        showToast('Failed to load payments', 'error');
+      });
+  }
+
+  /* ── Update summary stats ── */
+  function updateStats(data) {
+    const now = new Date();
+
+    const paid = data
+      .filter(p => (p.status||'').toLowerCase() === 'paid')
+      .reduce((s, p) => s + (parseFloat(p.amount)||0), 0);
+
+    const due = data
+      .filter(p => ['due','pending'].includes((p.status||'').toLowerCase()))
+      .reduce((s, p) => s + (parseFloat(p.amount)||0), 0);
+
+    const monthly = data
+      .filter(p => {
+        if ((p.status||'').toLowerCase() !== 'paid') return false;
+        const d = new Date(p.payment_date || p.date || 0);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((s, p) => s + (parseFloat(p.amount)||0), 0);
+
+    document.getElementById('statPaid').textContent  = fmtINR(paid);
+    document.getElementById('statDue').textContent   = fmtINR(due);
+    document.getElementById('statCount').textContent = data.length;
+    document.getElementById('statMonth').textContent = fmtINR(monthly);
+  }
+
+  /* ── Render table ── */
+  function renderTable(data) {
+    const tbody = document.getElementById('paymentsBody');
+    const role  = getUser() ? getUser().role : '';
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+        <i class="fas fa-receipt"></i>
+        No payment records found.<br>
+        <small style="margin-top:6px;display:block;">
+          Click <strong>Record Payment</strong> to add the first one.
+        </small>
+      </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(p => {
+      const status   = (p.status || 'paid').toLowerCase();
+      const pillCls  = status === 'paid' ? 'pill-paid'
+                     : status === 'pending' ? 'pill-pending'
+                     : 'pill-due';
+      const amtCls   = status === 'paid' ? 'amount-paid'
+                     : status === 'pending' ? 'amount-pending'
+                     : 'amount-due';
+      const method   = (p.method || p.payment_method || 'cash')
+                        .replace('_',' ').toUpperCase();
+      const date     = p.payment_date || p.date || '';
+      const pid      = p.payment_id || p.id;
+      const mName    = p.member_name || p.name || '—';
+      const mId      = p.member_id || '—';
+
+      const actions = role === 'admin' ? `
+        <div class="action-btns">
+          ${status !== 'paid' ? `<button class="act-btn success" title="Mark as Paid"
+            onclick="markPaid(${pid})"><i class="fas fa-check"></i></button>` : ''}
+          <button class="act-btn" title="Edit" onclick="editPayment(${pid})">
+            <i class="fas fa-pen"></i>
+          </button>
+          <button class="act-btn danger" title="Delete" onclick="deletePayment(${pid})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>` : '<span style="color:var(--muted);font-size:12px;">—</span>';
+
+      return `<tr>
+        <td>
+          <div class="member-name">${mName}</div>
+          <div class="member-id">Member #${mId}</div>
+        </td>
+        <td>
+          <span class="amount-cell ${amtCls}">
+            ₹${parseFloat(p.amount||0).toLocaleString('en-IN')}
+          </span>
+        </td>
+        <td><span class="method-badge">${method}</span></td>
+        <td><span class="status-pill ${pillCls}">
+          ${status.charAt(0).toUpperCase() + status.slice(1)}
+        </span></td>
+        <td style="color:var(--muted);font-size:12.5px;">${fmtDate(date)}</td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Filter ── */
+  function filterTable() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
+    const st = document.getElementById('statusFilter').value.toLowerCase();
+    const mt = document.getElementById('methodFilter').value.toLowerCase();
+
+    const filtered = allPayments.filter(p => {
+      const name   = (p.member_name || p.name || '').toLowerCase();
+      const mid    = String(p.member_id || '');
+      const status = (p.status || '').toLowerCase();
+      const method = (p.method || p.payment_method || '').toLowerCase();
+      return (!q  || name.includes(q) || mid.includes(q))
+          && (!st || status === st)
+          && (!mt || method === mt);
+    });
+    renderTable(filtered);
+  }
+
+  /* ── Member lookup hint ── */
+  function lookupMember() {
+    const id   = parseInt(document.getElementById('fMemberId').value);
+    const hint = document.getElementById('memberHint');
+    if (!id) { hint.innerHTML = 'Enter the member\'s ID number'; return; }
+    const m = allMembers.find(x => x.member_id === id);
+    if (m) {
+      hint.innerHTML = `Found: <span>${m.name}</span> (${m.status || 'active'})`;
+    } else {
+      hint.innerHTML = `No member found with ID ${id}`;
+    }
+  }
+
+  /* ── Open modal ── */
+  function openModal(p) {
+    document.getElementById('editId').value    = p ? (p.payment_id || p.id || '') : '';
+    document.getElementById('modalTitle').textContent = p ? 'EDIT PAYMENT' : 'RECORD PAYMENT';
+    document.getElementById('fMemberId').value = p ? (p.member_id || '') : '';
+    document.getElementById('fAmount').value   = p ? (p.amount || '') : '';
+    document.getElementById('fMethod').value   = p ? (p.method || p.payment_method || 'cash') : 'cash';
+    document.getElementById('fStatus').value   = p ? (p.status || 'paid') : 'paid';
+    document.getElementById('fDate').value     = p
+      ? ((p.payment_date || p.date || '').split('T')[0] || new Date().toISOString().split('T')[0])
+      : new Date().toISOString().split('T')[0];
+    document.getElementById('fNotes').value    = p ? (p.notes || '') : '';
+    document.getElementById('memberHint').innerHTML = 'Enter the member\'s ID number';
+
+    // If editing, show member name in hint
+    if (p && p.member_name) {
+      document.getElementById('memberHint').innerHTML =
+        `Member: <span>${p.member_name}</span>`;
+    }
+
+    document.getElementById('payModal').classList.add('open');
+    setTimeout(() => document.getElementById('fMemberId').focus(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById('payModal').classList.remove('open');
+  }
+
+  function editPayment(id) {
+    const p = allPayments.find(x => (x.payment_id || x.id) === id);
+    if (p) openModal(p);
+    else showToast('Payment not found', 'error');
+  }
+
+  /* ── Save payment ── */
+  function savePayment() {
+    const id       = document.getElementById('editId').value;
+    const memberId = document.getElementById('fMemberId').value.trim();
+    const amount   = document.getElementById('fAmount').value;
+
+    if (!memberId) {
+      showToast('Member ID is required', 'error');
+      document.getElementById('fMemberId').focus();
+      return;
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+      showToast('Please enter a valid amount', 'error');
+      document.getElementById('fAmount').focus();
+      return;
+    }
+
+    const payload = {
+      member_id: parseInt(memberId),
+      amount:    parseFloat(amount),
+      method:    document.getElementById('fMethod').value  || 'cash',
+      status:    document.getElementById('fStatus').value  || 'paid',
+      date:      document.getElementById('fDate').value    || null,
+      notes:     document.getElementById('fNotes').value   || null,
+    };
+
+    const path   = id ? '/payments/' + id : '/payments';
+    const method = id ? 'PUT' : 'POST';
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    apiFetch(path, { method: method, body: JSON.stringify(payload) })
+      .then(r => {
+        if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'Save failed'); });
+        return r.json();
+      })
+      .then(() => {
+        closeModal();
+        loadPayments();
+        showToast(id ? 'Payment updated!' : 'Payment recorded successfully!');
+      })
+      .catch(e => showToast(e.message || 'Save failed. Check member ID exists.', 'error'))
+      .finally(() => {
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Payment';
+      });
+  }
+
+  /* ── Mark as paid ── */
+  function markPaid(id) {
+    if (!confirm('Mark this payment as Paid?')) return;
+    const p = allPayments.find(x => (x.payment_id || x.id) === id);
+    if (!p) return;
+    const payload = {
+      member_id: p.member_id,
+      amount:    p.amount,
+      method:    p.method || 'cash',
+      status:    'paid',
+      date:      p.payment_date || p.date || new Date().toISOString().split('T')[0],
+      notes:     p.notes || null,
+    };
+    apiFetch('/payments/' + id, { method: 'PUT', body: JSON.stringify(payload) })
+      .then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); })
+      .then(() => { loadPayments(); showToast('Marked as paid! ✓'); })
+      .catch(e  => showToast(e.message || 'Failed', 'error'));
+  }
+
+  /* ── Delete payment ── */
+  function deletePayment(id) {
+    if (!confirm('Delete this payment record? This cannot be undone.')) return;
+    apiFetch('/payments/' + id, { method: 'DELETE' })
+      .then(r => { if (!r.ok) throw new Error('Delete failed'); return r.json(); })
+      .then(() => { loadPayments(); showToast('Payment deleted'); })
+      .catch(e  => showToast(e.message || 'Delete failed', 'error'));
+  }
+
+  /* ── Theme ── */
+  function toggleTheme() {
+    const html = document.documentElement;
+    const dark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', dark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = dark ? '🌞' : '🌜';
+    localStorage.setItem('gymTheme', dark ? 'light' : 'dark');
+  }
+
+  /* ── Logout ── */
+  function doLogout() {
+    apiFetch('/logout', { method: 'POST' })
+      .catch(() => {})
+      .finally(() => {
+        localStorage.removeItem('gymUser');
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      });
+  }
+
+  /* ── Init ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Theme
+    const theme = localStorage.getItem('gymTheme') || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌜' : '🌞';
+
+    // Auth guard
+    const user = getUser();
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    // Set user info
+    const name = user.username || 'User';
+    document.getElementById('sidebarUser').textContent = name;
+    document.getElementById('userInitial').textContent = name[0].toUpperCase();
+    document.getElementById('sidebarRole').textContent =
+      (user.role||'user').charAt(0).toUpperCase() + (user.role||'user').slice(1);
+
+    // Hide admin-only for non-admins
+    if (user.role !== 'admin') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    }
+
+    // Hide role-restricted nav
+    document.querySelectorAll('[data-role]').forEach(el => {
+      if (!el.getAttribute('data-role').includes(user.role)) el.style.display = 'none';
+    });
+
+    // Close modal on backdrop click
+    document.getElementById('payModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Load data
+    loadMembersCache();
+    loadPayments();
+  });
+</script>
+</body>
+</html>

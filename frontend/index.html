@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Complete Gym Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0c10;
+      --surface:   #111318;
+      --surface2:  #191d26;
+      --border:    rgba(255,255,255,0.07);
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --accent:    #3b82f6;
+      --accent2:   #6366f1;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+      --red:       #ef4444;
+      --font-body: 'DM Sans', sans-serif;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --radius:    14px;
+    }
+    [data-theme="light"] {
+      --bg:      #f0f2f7;
+      --surface: #ffffff;
+      --surface2:#f8fafc;
+      --border:  rgba(0,0,0,0.08);
+      --text:    #1a1f2e;
+      --muted:   #94a3b8;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      transition: background .3s, color .3s;
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+      background: rgba(10,12,16,0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      height: 64px;
+      transition: background .3s;
+    }
+    [data-theme="light"] .navbar { background: rgba(240,242,247,0.9); }
+    .navbar .container {
+      height: 100%;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-head);
+      font-size: 22px; letter-spacing: 1px;
+    }
+    .nav-logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 9px;
+      display: grid; place-items: center;
+      font-size: 14px; color: white; font-family: var(--font-body);
+    }
+    .nav-logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .nav-links a {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 14px; font-weight: 500;
+      color: var(--muted);
+      transition: all .15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--surface2); }
+
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      width: 36px; height: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      display: grid; place-items: center;
+      cursor: pointer; color: var(--muted); font-size: 15px;
+      transition: all .15s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    .btn-nav {
+      padding: 8px 18px;
+      background: var(--accent);
+      color: white;
+      border-radius: 9px;
+      font-size: 14px; font-weight: 600;
+      border: none; cursor: pointer;
+      font-family: var(--font-body);
+      transition: opacity .15s;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn-nav:hover { opacity: .88; }
+
+    .hamburger {
+      display: none;
+      background: none; border: none;
+      color: var(--text); font-size: 20px; cursor: pointer;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 100px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 60% 40%, rgba(59,130,246,0.12) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 50% at 20% 80%, rgba(99,102,241,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 60px;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: var(--accent);
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .hero-title {
+      font-family: var(--font-head);
+      font-size: clamp(46px, 6vw, 74px);
+      line-height: 1;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .hero-title .accent { color: var(--accent); }
+    .hero-desc {
+      font-size: 16px; line-height: 1.7;
+      color: var(--muted); max-width: 460px;
+      margin-bottom: 36px;
+    }
+    .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px;
+      background: var(--accent);
+      color: white; font-weight: 600; font-size: 15px;
+      border-radius: 10px;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text); font-weight: 500; font-size: 15px;
+      border-radius: 10px;
+      transition: border-color .15s, transform .15s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    /* hero visual */
+    .hero-visual {
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    .hero-card-stack { position: relative; width: 100%; max-width: 420px; }
+    .hcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      position: relative;
+    }
+    .hcard-main {
+      z-index: 3;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .hcard-float {
+      position: absolute;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      white-space: nowrap;
+      animation: floatBob 3s ease-in-out infinite;
+    }
+    .hcard-float.f1 { top: -18px; right: -20px; animation-delay: 0s; }
+    .hcard-float.f2 { bottom: -18px; left: -20px; animation-delay: 1.5s; }
+    @keyframes floatBob {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+    .hcard-title { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 14px; }
+    .hcard-stat { font-family: var(--font-head); font-size: 38px; color: var(--accent); margin-bottom: 4px; }
+    .hcard-label { font-size: 13px; color: var(--muted); }
+    .hcard-bar { height: 5px; background: var(--surface2); border-radius: 99px; margin-top: 14px; overflow: hidden; }
+    .hcard-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 72%; }
+    .float-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+    }
+    .stats-bar .container {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 0;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 0 20px;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: var(--font-head);
+      font-size: 36px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── SECTION HEADER ── */
+    .section-head { text-align: center; margin-bottom: 52px; }
+    .section-head h2 {
+      font-family: var(--font-head);
+      font-size: clamp(32px, 4vw, 48px);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .section-head p { font-size: 15px; color: var(--muted); }
+
+    /* ── FEATURES ── */
+    .features { padding: 90px 0; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0; transition: opacity .2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.3); border-color: rgba(59,130,246,.3); }
+    .feature-card:hover::before { opacity: 1; }
+    .feat-icon {
+      width: 46px; height: 46px;
+      background: rgba(59,130,246,0.12);
+      border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 18px; color: var(--accent);
+      margin-bottom: 18px;
+    }
+    .feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+    .feature-card p { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+    .feat-list { list-style: none; }
+    .feat-list li {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--muted);
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .feat-list li:last-child { border-bottom: none; }
+    .feat-list li i { color: var(--green); font-size: 11px; }
+
+    /* ── WHY CHOOSE ── */
+    .why-section { padding: 90px 0; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .why-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 72px; align-items: center;
+    }
+    .why-visual {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .why-visual-title { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 4px; }
+    .metric-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .metric-label { font-size: 13px; color: var(--muted); min-width: 100px; }
+    .metric-track { flex: 1; height: 6px; background: var(--surface); border-radius: 99px; overflow: hidden; }
+    .metric-fill { height: 100%; border-radius: 99px; }
+    .metric-val { font-family: var(--font-mono); font-size: 12px; color: var(--text); min-width: 36px; text-align: right; }
+
+    .why-text h2 {
+      font-family: var(--font-head);
+      font-size: clamp(30px, 4vw, 46px);
+      letter-spacing: 1px; margin-bottom: 14px;
+    }
+    .why-text > p { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 32px; }
+    .benefit-list { display: flex; flex-direction: column; gap: 16px; }
+    .benefit-item {
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .benefit-dot {
+      width: 34px; height: 34px;
+      background: rgba(59,130,246,0.12);
+      border-radius: 9px;
+      display: grid; place-items: center;
+      color: var(--accent); font-size: 15px;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .benefit-item h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .benefit-item p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ── INTEGRATIONS ── */
+    .integrations { padding: 90px 0; }
+    .integ-category { margin-bottom: 48px; }
+    .integ-category-title {
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      letter-spacing: 1px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .integ-category-title i { color: var(--accent); }
+    .integ-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 14px;
+    }
+    .integ-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      transition: border-color .2s, transform .2s;
+    }
+    .integ-card:hover { border-color: rgba(59,130,246,.35); transform: translateY(-3px); }
+    .integ-icon {
+      width: 40px; height: 40px;
+      background: var(--surface2);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 16px; color: var(--accent);
+      margin-bottom: 14px;
+    }
+    .integ-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .integ-card p  { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+    .integ-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .integ-tag {
+      font-size: 11px; font-weight: 500;
+      padding: 3px 8px; border-radius: 20px;
+      background: rgba(59,130,246,0.1); color: var(--accent);
+    }
+
+    /* coming soon */
+    .coming-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+      margin-top: 32px;
+    }
+    .coming-card {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .coming-card i { font-size: 22px; display: block; margin-bottom: 8px; opacity: .5; }
+    .coming-label {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase;
+      background: rgba(234,179,8,.1); color: var(--yellow);
+      padding: 2px 8px; border-radius: 20px; margin-top: 8px;
+    }
+
+    /* workflow */
+    .workflow { margin-top: 60px; }
+    .workflow-title {
+      font-family: var(--font-head); font-size: 28px; letter-spacing: 1px;
+      text-align: center; margin-bottom: 36px;
+    }
+    .workflow-steps {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 0;
+      position: relative;
+    }
+    .workflow-steps::before {
+      content: '';
+      position: absolute; top: 28px; left: 12%; right: 12%;
+      height: 1px; background: var(--border);
+    }
+    .workflow-step { text-align: center; padding: 0 16px; }
+    .workflow-num {
+      width: 54px; height: 54px;
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-family: var(--font-head); font-size: 22px; color: var(--accent);
+      margin: 0 auto 16px;
+      position: relative; z-index: 1;
+    }
+    .workflow-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .workflow-step p  { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+    /* ── LOGIN SECTION ── */
+    .login-section { padding: 90px 0; background: var(--surface); border-top: 1px solid var(--border); }
+    .login-cards {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 18px;
+      margin-top: 48px;
+    }
+    .login-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 0;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      cursor: pointer;
+      position: relative; overflow: hidden;
+    }
+    .login-card::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      opacity: 0; transition: opacity .2s;
+    }
+    .login-card.member::after  { background: var(--green); }
+    .login-card.trainer::after { background: var(--yellow); }
+    .login-card.admin::after   { background: var(--accent); }
+    .login-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.3); }
+    .login-card.member:hover  { border-color: rgba(34,197,94,.4); }
+    .login-card.trainer:hover { border-color: rgba(234,179,8,.4); }
+    .login-card.admin:hover   { border-color: rgba(59,130,246,.4); }
+    .login-card:hover::after  { opacity: 1; }
+    .lcard-icon {
+      width: 50px; height: 50px;
+      border-radius: 13px;
+      display: grid; place-items: center;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .member  .lcard-icon { background: rgba(34,197,94,.12);  color: var(--green); }
+    .trainer .lcard-icon { background: rgba(234,179,8,.12);  color: var(--yellow); }
+    .admin   .lcard-icon { background: rgba(59,130,246,.12); color: var(--accent); }
+    .login-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .login-card p  { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
+    .lcard-arrow {
+      margin-top: 24px;
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: grid; place-items: center;
+      font-size: 14px;
+      transition: transform .15s;
+    }
+    .member  .lcard-arrow { background: rgba(34,197,94,.12);  color: var(--green); }
+    .trainer .lcard-arrow { background: rgba(234,179,8,.12);  color: var(--yellow); }
+    .admin   .lcard-arrow { background: rgba(59,130,246,.12); color: var(--accent); }
+    .login-card:hover .lcard-arrow { transform: translateX(4px); }
+
+    /* logged-in state */
+    .already-logged {
+      background: var(--bg);
+      border: 1px solid rgba(59,130,246,.3);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      display: none;
+    }
+    .already-logged h3 { font-size: 20px; margin-bottom: 8px; }
+    .already-logged p  { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    .already-logged .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 90px 0;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(59,130,246,0.1) 0%, transparent 70%);
+    }
+    .cta-section h2 {
+      font-family: var(--font-head);
+      font-size: clamp(34px, 5vw, 56px);
+      letter-spacing: 1px; margin-bottom: 14px;
+      position: relative;
+    }
+    .cta-section p { font-size: 16px; color: var(--muted); margin-bottom: 34px; position: relative; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 24px;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px; margin-bottom: 36px;
+    }
+    .footer-brand p { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin-top: 12px; max-width: 280px; }
+    .footer-col h4 { font-size: 13px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 10px; }
+    .footer-col a { font-size: 14px; color: var(--muted); transition: color .15s; }
+    .footer-col a:hover { color: var(--text); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: var(--muted);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 18px;
+      font-size: 13px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s ease; z-index: 9999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp .6s ease both; }
+    .delay-1 { animation-delay: .1s; }
+    .delay-2 { animation-delay: .2s; }
+    .delay-3 { animation-delay: .3s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      .hero-inner, .why-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .features-grid, .integ-grid { grid-template-columns: 1fr 1fr; }
+      .login-cards { grid-template-columns: 1fr; }
+      .workflow-steps { grid-template-columns: 1fr 1fr; }
+      .workflow-steps::before { display: none; }
+      .coming-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .stats-bar .container { grid-template-columns: repeat(2,1fr); gap: 18px; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+      .stat-item:nth-child(2n) { border-bottom: 1px solid var(--border); }
+      .stat-item:last-child, .stat-item:nth-last-child(2) { border-bottom: none; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; flex-direction: column; position: absolute; top: 64px; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; gap: 4px; }
+      .nav-links.open { display: flex; }
+      .hamburger { display: block; }
+      .features-grid, .integ-grid { grid-template-columns: 1fr; }
+      .workflow-steps { grid-template-columns: 1fr; }
+      .coming-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+      .stats-bar .container { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-icon"><i class="fas fa-dumbbell"></i></div>
+        GYM<span>PRO</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#why">Why Us</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#login">Login</a>
+      </div>
+      <div class="nav-actions">
+        <div class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌜</div>
+        <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i></button>
+        <a href="#login" class="btn-nav"><i class="fas fa-arrow-right"></i> Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-text fade-up">
+          <div class="hero-eyebrow"><i class="fas fa-bolt"></i> All-in-One Gym Management</div>
+          <h1 class="hero-title">Manage Your <span class="accent">Gym</span> with Confidence</h1>
+          <p class="hero-desc">GymPro is the complete platform for modern gym operations — members, trainers, payments, workouts, and AI support, all in one place.</p>
+          <div class="hero-cta">
+            <a href="dashboard.html" class="btn-primary"><i class="fas fa-rocket"></i> Go to Dashboard</a>
+            <a href="#features" class="btn-ghost"><i class="fas fa-arrow-down"></i> See Features</a>
+          </div>
+        </div>
+        <div class="hero-visual fade-up delay-2">
+          <div class="hero-card-stack">
+            <div class="hcard hcard-main">
+              <div class="hcard-title">Monthly Overview</div>
+              <div class="hcard-stat" id="heroMembers">—</div>
+              <div class="hcard-label">Total Members</div>
+              <div class="hcard-bar"><div class="hcard-bar-fill"></div></div>
+            </div>
+            <div class="hcard-float f1">
+              <div class="float-dot" style="background:var(--green);"></div>
+              <span id="heroActive">— active today</span>
+            </div>
+            <div class="hcard-float f2">
+              <div class="float-dot" style="background:var(--accent);"></div>
+              <span id="heroRevenue">Revenue: ₹0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS BAR ── -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stat-item">
+        <div class="stat-num">10K+</div>
+        <div class="stat-lbl">Active Members</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">500+</div>
+        <div class="stat-lbl">Fitness Centers</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">99.9%</div>
+        <div class="stat-lbl">Uptime</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">24/7</div>
+        <div class="stat-lbl">Support</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-head">
+        <h2>Powerful Features</h2>
+        <p>Everything you need to run a successful, modern gym</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feat-icon"><i class="fas fa-users"></i></div>
+          <h3>Member Management</h3>
+          <p>Manage profiles, track progress, and handle renewals automatically.</p>
+          <ul class="feat-list">
+            <li><i class="fas fa-check"></i> Registration & Profiles</li>
+            <li><i class="fas fa-check"></i> Activity Tracking</li>
+            <li><i class="fas fa-check"></i> Plans & Renewals</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <div class="feat-icon"><i class="fas fa-credit-card"></i></div>
+          <h3>Payment Management</h3>
+          <p>Process payments, generate GST invoices, and get real-time revenue insights.</p>
+          <ul class="feat-list">
+            <li><i class="fas fa-check"></i> Payment Processing</li>
+            <li><i class="fas fa-check"></i> GST Invoices</li>
+            <li><i class="fas fa-check"></i> Auto Billing</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <div class="feat-icon"><i class="fas fa-dumbbell"></i></div>
+          <h3>Workout Plans</h3>
+          <p>Create customized plans and track member fitness progress effectively.</p>
+          <ul class="feat-list">
+            <li><i class="fas fa-check"></i> Plan Creation</li>
+            <li><i class="fas fa-check"></i> Progress Tracking</li>
+            <li><i class="fas fa-check"></i> Customization</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <div class="feat-icon"><i class="fas fa-user-tie"></i></div>
+          <h3>Trainer Management</h3>
+          <p>Organize trainer schedules and manage assignments efficiently.</p>
+          <ul class="feat-list">
+            <li><i class="fas fa-check"></i> Trainer Profiles</li>
+            <li><i class="fas fa-check"></i> Schedule Management</li>
+            <li><i class="fas fa-check"></i> Assignments</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <div class="feat-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Analytics & Reports</h3>
+          <p>Comprehensive insights with detailed analytics and exportable reports.</p>
+          <ul class="feat-list">
+            <li><i class="fas fa-check"></i> Revenue Dashboard</li>
+            <li><i class="fas fa-check"></i> Member Analytics</li>
+            <li><i class="fas fa-check"></i> Export Reports</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <div class="feat-icon"><i class="fas fa-robot"></i></div>
+          <h3>AI Assistant</h3>
+          <p>Intelligent recommendations and automated 24/7 support via our chatbot.</p>
+          <ul class="feat-list">
+            <li><i class="fas fa-check"></i> Smart Recommendations</li>
+            <li><i class="fas fa-check"></i> 24/7 Support</li>
+            <li><i class="fas fa-check"></i> Learning Analysis</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHY CHOOSE ── -->
+  <section class="why-section" id="why">
+    <div class="container">
+      <div class="why-inner">
+        <div class="why-visual">
+          <div class="why-visual-title">Performance Metrics</div>
+          <div class="metric-row">
+            <span class="metric-label">Member Growth</span>
+            <div class="metric-track"><div class="metric-fill" style="width:82%;background:var(--accent);"></div></div>
+            <span class="metric-val">82%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Revenue Growth</span>
+            <div class="metric-track"><div class="metric-fill" style="width:74%;background:var(--green);"></div></div>
+            <span class="metric-val">74%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Retention Rate</span>
+            <div class="metric-track"><div class="metric-fill" style="width:91%;background:var(--yellow);"></div></div>
+            <span class="metric-val">91%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Trainer Util.</span>
+            <div class="metric-track"><div class="metric-fill" style="width:68%;background:var(--accent2);"></div></div>
+            <span class="metric-val">68%</span>
+          </div>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:16px;font-size:12px;color:var(--muted);">
+            <span><i class="fas fa-circle" style="color:var(--green);font-size:8px;margin-right:4px;"></i>Live Data</span>
+            <span><i class="fas fa-circle" style="color:var(--accent);font-size:8px;margin-right:4px;"></i>Updated Daily</span>
+          </div>
+        </div>
+        <div class="why-text">
+          <h2>Why Choose GymPro?</h2>
+          <p>GymPro simplifies gym management with an intuitive interface, powerful automation, and reliable 24/7 support built for Indian fitness businesses.</p>
+          <div class="benefit-list">
+            <div class="benefit-item">
+              <div class="benefit-dot"><i class="fas fa-wand-magic-sparkles"></i></div>
+              <div>
+                <h4>Easy to Use</h4>
+                <p>Intuitive interface that requires no technical training — get started in minutes.</p>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"><i class="fas fa-shield-halved"></i></div>
+              <div>
+                <h4>Secure & Reliable</h4>
+                <p>Enterprise-grade data security with 99.9% uptime guarantee.</p>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"><i class="fas fa-arrow-trend-up"></i></div>
+              <div>
+                <h4>Always Growing</h4>
+                <p>Regular feature updates and improvements based on real user feedback.</p>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"><i class="fas fa-headset"></i></div>
+              <div>
+                <h4>Great Support</h4>
+                <p>Dedicated 24/7 customer support to ensure your success.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INTEGRATIONS ── -->
+  <section class="integrations" id="integrations">
+    <div class="container">
+      <div class="section-head">
+        <h2>Integrations & Tools</h2>
+        <p>Connect with popular services for seamless gym operations</p>
+      </div>
+
+      <div class="integ-category">
+        <div class="integ-category-title"><i class="fas fa-comments"></i> Communication Tools</div>
+        <div class="integ-grid">
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fab fa-whatsapp"></i></div>
+            <h4>WhatsApp</h4>
+            <p>Send instant notifications and reminders directly to members' phones.</p>
+            <div class="integ-tags"><span class="integ-tag">Payment reminders</span><span class="integ-tag">Class updates</span><span class="integ-tag">Promotions</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-envelope"></i></div>
+            <h4>Email & SMS</h4>
+            <p>Automated email and SMS communications with bulk messaging support.</p>
+            <div class="integ-tags"><span class="integ-tag">Bulk messaging</span><span class="integ-tag">Auto workflows</span><span class="integ-tag">Analytics</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-bell"></i></div>
+            <h4>Push Notifications</h4>
+            <p>Real-time alerts for class reminders, events, and achievements.</p>
+            <div class="integ-tags"><span class="integ-tag">Class reminders</span><span class="integ-tag">Event alerts</span><span class="integ-tag">Badges</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="integ-category">
+        <div class="integ-category-title"><i class="fas fa-credit-card"></i> Payment Solutions</div>
+        <div class="integ-grid">
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-building-columns"></i></div>
+            <h4>Payment Gateway</h4>
+            <p>Secure online payment processing with UPI, cards, and digital wallets.</p>
+            <div class="integ-tags"><span class="integ-tag">UPI</span><span class="integ-tag">Cards</span><span class="integ-tag">Wallets</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-rupee-sign"></i></div>
+            <h4>GST Invoicing</h4>
+            <p>Automated GST-compliant billing with auto invoices and tax calculations.</p>
+            <div class="integ-tags"><span class="integ-tag">Auto invoices</span><span class="integ-tag">Tax calc</span><span class="integ-tag">GST reports</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-receipt"></i></div>
+            <h4>Invoicing System</h4>
+            <p>Generate, manage, and email invoices with full payment tracking.</p>
+            <div class="integ-tags"><span class="integ-tag">PDF gen</span><span class="integ-tag">Email</span><span class="integ-tag">Tracking</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="integ-category">
+        <div class="integ-category-title"><i class="fas fa-key"></i> Access & Membership</div>
+        <div class="integ-grid">
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-fingerprint"></i></div>
+            <h4>Biometric Entry</h4>
+            <p>Secure fingerprint-based member identification and attendance logging.</p>
+            <div class="integ-tags"><span class="integ-tag">Fingerprint</span><span class="integ-tag">Attendance</span><span class="integ-tag">Security</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-barcode"></i></div>
+            <h4>QR Code Check-In</h4>
+            <p>Quick mobile QR-based member verification and visit tracking.</p>
+            <div class="integ-tags"><span class="integ-tag">Fast check-in</span><span class="integ-tag">Digital cards</span><span class="integ-tag">History</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-id-card"></i></div>
+            <h4>Member Cards</h4>
+            <p>Digital virtual membership card system with renewal tracking.</p>
+            <div class="integ-tags"><span class="integ-tag">Digital wallets</span><span class="integ-tag">Virtual cards</span><span class="integ-tag">Renewals</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="integ-category">
+        <div class="integ-category-title"><i class="fas fa-chart-line"></i> Reporting & Analytics</div>
+        <div class="integ-grid">
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-file-excel"></i></div>
+            <h4>Excel Export</h4>
+            <p>Export member data and revenue reports directly to Excel.</p>
+            <div class="integ-tags"><span class="integ-tag">Member data</span><span class="integ-tag">Revenue</span><span class="integ-tag">Bulk ops</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-file-pdf"></i></div>
+            <h4>PDF Reports</h4>
+            <p>Generate and schedule professional PDF reports with custom templates.</p>
+            <div class="integ-tags"><span class="integ-tag">Templates</span><span class="integ-tag">Email delivery</span><span class="integ-tag">Scheduled</span></div>
+          </div>
+          <div class="integ-card">
+            <div class="integ-icon"><i class="fas fa-chart-pie"></i></div>
+            <h4>Analytics Dashboard</h4>
+            <p>Real-time business intelligence with revenue trends and KPIs.</p>
+            <div class="integ-tags"><span class="integ-tag">Revenue trends</span><span class="integ-tag">Insights</span><span class="integ-tag">KPIs</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coming Soon -->
+      <div class="integ-category">
+        <div class="integ-category-title"><i class="fas fa-hourglass-half"></i> Coming Soon</div>
+        <div class="coming-grid">
+          <div class="coming-card"><i class="fab fa-facebook"></i> Social Media<div class="coming-label">Soon</div></div>
+          <div class="coming-card"><i class="fas fa-video"></i> Video Conferencing<div class="coming-label">Soon</div></div>
+          <div class="coming-card"><i class="fas fa-weight"></i> Fitness Trackers<div class="coming-label">Soon</div></div>
+          <div class="coming-card"><i class="fas fa-calendar"></i> Calendar Sync<div class="coming-label">Soon</div></div>
+        </div>
+      </div>
+
+      <!-- Workflow -->
+      <div class="workflow">
+        <div class="workflow-title">How It All Works Together</div>
+        <div class="workflow-steps">
+          <div class="workflow-step">
+            <div class="workflow-num">1</div>
+            <h4>Member Registration</h4>
+            <p>New members sign up, triggering automated welcome messages and account setup.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">2</div>
+            <h4>Payment Processing</h4>
+            <p>Secure gateway processes fees. GST invoices are auto-generated and emailed.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">3</div>
+            <h4>Access Control</h4>
+            <p>QR or biometric systems verify attendance with instant check-in confirmation.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">4</div>
+            <h4>Analytics & Reports</h4>
+            <p>Real-time dashboards track all metrics. Export to Excel/PDF anytime.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── LOGIN SECTION ── -->
+  <section class="login-section" id="login">
+    <div class="container">
+      <div class="section-head">
+        <h2>Access Your Portal</h2>
+        <p>Choose your role to get started</p>
+      </div>
+
+      <!-- shown when NOT logged in -->
+      <div class="login-cards" id="loginCards">
+        <a href="login.html?role=member" class="login-card member">
+          <div class="lcard-icon"><i class="fas fa-user"></i></div>
+          <h3>Member Login</h3>
+          <p>Track your workouts, manage your membership, and view your progress.</p>
+          <div class="lcard-arrow"><i class="fas fa-arrow-right"></i></div>
+        </a>
+        <a href="login.html?role=trainer" class="login-card trainer">
+          <div class="lcard-icon"><i class="fas fa-chalkboard-user"></i></div>
+          <h3>Trainer Login</h3>
+          <p>Manage your schedule, view assigned members, and update workout plans.</p>
+          <div class="lcard-arrow"><i class="fas fa-arrow-right"></i></div>
+        </a>
+        <a href="login.html?role=admin" class="login-card admin">
+          <div class="lcard-icon"><i class="fas fa-user-shield"></i></div>
+          <h3>Admin Login</h3>
+          <p>Full control over your gym — members, payments, trainers, and analytics.</p>
+          <div class="lcard-arrow"><i class="fas fa-arrow-right"></i></div>
+        </a>
+      </div>
+
+      <!-- shown when already logged in -->
+      <div class="already-logged" id="alreadyLogged">
+        <div style="width:56px;height:56px;background:rgba(59,130,246,.12);border-radius:50%;display:grid;place-items:center;font-size:22px;color:var(--accent);margin:0 auto 16px;"><i class="fas fa-check"></i></div>
+        <h3>Welcome back, <span id="loggedName">—</span>!</h3>
+        <p>You're already signed in. Jump back into your dashboard.</p>
+        <div class="btn-row">
+          <a href="dashboard.html" class="btn-primary"><i class="fas fa-chart-line"></i> Go to Dashboard</a>
+          <button onclick="doLogout()" class="btn-ghost"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Ready to Transform Your Gym?</h2>
+      <p>Join thousands of gym owners who trust GymPro to run their business.</p>
+      <a href="dashboard.html" class="btn-primary" style="font-size:16px;padding:15px 32px;">
+        <i class="fas fa-rocket"></i> Start for Free
+      </a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="nav-logo" style="margin-bottom:0;">
+            <div class="nav-logo-icon"><i class="fas fa-dumbbell"></i></div>
+            GYM<span style="color:var(--accent);">PRO</span>
+          </div>
+          <p>Your complete gym management solution — built for modern fitness businesses across India.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#why">Why GymPro</a></li>
+            <li><a href="#integrations">Integrations</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="chatbot.html">AI Assistant</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 GymPro. All rights reserved.</span>
+        <span>Made with <i class="fas fa-heart" style="color:var(--red);"></i> for fitness professionals</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle" style="color:var(--green);"></i>
+    <span id="toastMsg">Done!</span>
+  </div>
+
+  <script>
+    /* ── Helpers ── */
+    function getData(k) { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } }
+    function getUser()  { try { return JSON.parse(localStorage.getItem('currentUser')) || null; } catch { return null; } }
+
+    /* ── Theme ── */
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('themeBtn').textContent = isDark ? '🌞' : '🌜';
+      localStorage.setItem('gymTheme', isDark ? 'light' : 'dark');
+    }
+
+    /* ── Toast ── */
+    function showToast(msg) {
+      document.getElementById('toastMsg').textContent = msg;
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    /* ── Logout ── */
+    function doLogout() {
+      localStorage.removeItem('currentUser');
+      showToast('Logged out successfully');
+      setTimeout(() => location.reload(), 900);
+    }
+
+    /* ── Hero live stats from localStorage ── */
+    function loadHeroStats() {
+      const members  = getData('gymMembers');
+      const payments = getData('gymPayments');
+
+      document.getElementById('heroMembers').textContent = members.length || '0';
+
+      const active = members.filter(m => (m.status||'active').toLowerCase() === 'active').length;
+      document.getElementById('heroActive').textContent = `${active} active today`;
+
+      const now = new Date();
+      const revenue = payments
+        .filter(p => {
+          const d = new Date(p.date || p.createdAt || 0);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && p.status === 'paid';
+        })
+        .reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+
+      const fmt = n => n >= 100000 ? '₹'+(n/100000).toFixed(1)+'L' : n >= 1000 ? '₹'+(n/1000).toFixed(1)+'K' : '₹'+n;
+      document.getElementById('heroRevenue').textContent = 'Revenue: ' + fmt(revenue);
+    }
+
+    /* ── Login section: show continue if logged in ── */
+    function checkLoginState() {
+      const user = getUser();
+      if (user) {
+        document.getElementById('loginCards').style.display  = 'none';
+        document.getElementById('alreadyLogged').style.display = 'block';
+        document.getElementById('loggedName').textContent = user.username || user.name || 'User';
+      }
+    }
+
+    /* ── Hamburger ── */
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+    document.getElementById('navLinks').querySelectorAll('a').forEach(a =>
+      a.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'))
+    );
+    document.addEventListener('click', e => {
+      const ham = document.getElementById('hamburger');
+      const nav = document.getElementById('navLinks');
+      if (!ham.contains(e.target) && !nav.contains(e.target)) nav.classList.remove('open');
+    });
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('gymTheme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌜' : '🌞';
+      loadHeroStats();
+      checkLoginState();
+    });
+  </script>
+</body>
+</html>

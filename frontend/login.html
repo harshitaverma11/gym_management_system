@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0c10;
+      --surface:  #111318;
+      --surface2: #191d26;
+      --border:   rgba(255,255,255,0.07);
+      --text:     #e8eaf0;
+      --muted:    #6b7280;
+      --accent:   #3b82f6;
+      --accent2:  #6366f1;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --yellow:   #eab308;
+      --font-body:'DM Sans', sans-serif;
+      --font-head:'Bebas Neue', sans-serif;
+    }
+    [data-theme="light"] {
+      --bg:       #f0f2f7;
+      --surface:  #ffffff;
+      --surface2: #f8fafc;
+      --border:   rgba(0,0,0,0.08);
+      --text:     #1a1f2e;
+      --muted:    #94a3b8;
+    }
+
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      transition: background .3s, color .3s;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 40% 50%, rgba(59,130,246,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .left-content { position: relative; z-index: 1; max-width: 420px; }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 48px;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 18px; color: white;
+    }
+    .brand-name {
+      font-family: var(--font-head);
+      font-size: 26px; letter-spacing: 1px;
+    }
+    .brand-name span { color: var(--accent); }
+    .left-title {
+      font-family: var(--font-head);
+      font-size: clamp(36px, 4vw, 56px);
+      letter-spacing: 1px; line-height: 1;
+      margin-bottom: 16px;
+    }
+    .left-title span { color: var(--accent); }
+    .left-desc {
+      font-size: 15px; color: var(--muted);
+      line-height: 1.7; margin-bottom: 40px;
+    }
+    .feature-list { display: flex; flex-direction: column; gap: 12px; }
+    .feature-item {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+    }
+    .feature-item i { color: var(--accent); width: 18px; text-align: center; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      width: 460px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 44px;
+      position: relative;
+    }
+    .theme-toggle {
+      position: absolute; top: 20px; right: 20px;
+      width: 36px; height: 36px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      display: grid; place-items: center;
+      cursor: pointer; font-size: 16px;
+    }
+
+    .form-title { font-family: var(--font-head); font-size: 32px; letter-spacing: 1px; margin-bottom: 6px; }
+    .form-sub   { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+    /* Role tabs */
+    .role-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-bottom: 28px;
+    }
+    .role-tab {
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      text-align: center;
+      font-size: 12px; font-weight: 600;
+      color: var(--muted);
+      transition: all .15s;
+    }
+    .role-tab i { display: block; font-size: 18px; margin-bottom: 5px; }
+    .role-tab.active {
+      border-color: var(--accent);
+      background: rgba(59,130,246,.1);
+      color: var(--accent);
+    }
+
+    /* Error box */
+    .error-box {
+      display: none;
+      align-items: center; gap: 8px;
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3);
+      color: var(--red);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+    .error-box.show { display: flex; }
+
+    /* Fields */
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .6px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 7px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 13px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted); font-size: 14px;
+      pointer-events: none;
+    }
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px 11px 38px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font-body);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus        { border-color: var(--accent); }
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      font-size: 14px; padding: 4px;
+    }
+
+    /* Submit */
+    .btn-login {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; border: none;
+      border-radius: 10px;
+      font-size: 15px; font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .15s, transform .15s;
+      margin-top: 4px;
+    }
+    .btn-login:hover    { opacity: .9; transform: translateY(-1px); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .form-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px; color: var(--muted);
+    }
+    .form-footer a { color: var(--accent); text-decoration: none; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 18px;
+      font-size: 13px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s ease; z-index: 9999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .right-panel { animation: fadeIn .4s ease; }
+
+    @media (max-width: 800px) {
+      .left-panel  { display: none; }
+      .right-panel { width: 100%; border-left: none; min-height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT BRANDING PANEL -->
+  <div class="left-panel">
+    <div class="left-content">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-dumbbell"></i></div>
+        <div class="brand-name">GYM<span>PRO</span></div>
+      </div>
+      <h1 class="left-title">Your Gym.<br><span>Managed.</span></h1>
+      <p class="left-desc">
+        The all-in-one platform for modern gym operations —
+        members, trainers, payments, and AI support.
+      </p>
+      <div class="feature-list">
+        <div class="feature-item"><i class="fas fa-users"></i> Member &amp; Trainer Management</div>
+        <div class="feature-item"><i class="fas fa-credit-card"></i> Payments &amp; GST Invoicing</div>
+        <div class="feature-item"><i class="fas fa-chart-line"></i> Real-time Analytics Dashboard</div>
+        <div class="feature-item"><i class="fas fa-robot"></i> AI-powered Assistant</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT LOGIN PANEL -->
+  <div class="right-panel">
+    <div class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌜</div>
+
+    <div class="form-title">Welcome Back</div>
+    <p class="form-sub">Sign in to your GymPro account</p>
+
+    <!-- Role Tabs -->
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRole('admin', this)">
+        <i class="fas fa-user-shield"></i> Admin
+      </div>
+      <div class="role-tab" onclick="setRole('trainer', this)">
+        <i class="fas fa-chalkboard-user"></i> Trainer
+      </div>
+      <div class="role-tab" onclick="setRole('member', this)">
+        <i class="fas fa-user"></i> Member
+      </div>
+    </div>
+
+    <!-- Error Box -->
+    <div class="error-box" id="errorBox">
+      <i class="fas fa-circle-xmark"></i>
+      <span id="errorText">Invalid credentials</span>
+    </div>
+
+    <!-- Form -->
+    <div class="field">
+      <label>Username</label>
+      <div class="input-wrap">
+        <i class="fas fa-user input-icon"></i>
+        <input type="text" id="username" placeholder="Enter your username" autocomplete="username">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <div class="input-wrap">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" id="passwordInput">
+        <button class="eye-btn" type="button" onclick="togglePassword()">
+          <i class="fas fa-eye" id="eyeIcon"></i>
+        </button>
+      </div>
+    </div>
+
+    <input type="hidden" id="selectedRole" value="admin">
+
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">
+      <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+    </button>
+
+    <div class="form-footer">
+      <a href="index.html"><i class="fas fa-arrow-left"></i> Back to home</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle" style="color:var(--green);"></i>
+    <span id="toastMsg">Done!</span>
+  </div>
+
+  <script>
+    /* ════════════════════════════════════════════════════
+       LOGIN PAGE — only calls POST /login
+       NO calls to /members, /trainers or any other API
+    ════════════════════════════════════════════════════ */
+
+    const API = 'http://127.0.0.1:5000';
+
+    /* ── role selector ── */
+    function setRole(role, el) {
+      document.getElementById('selectedRole').value = role;
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    /* ── password toggle ── */
+    function togglePassword() {
+      const inp  = document.getElementById('password');
+      const icon = document.getElementById('eyeIcon');
+      if (inp.type === 'password') {
+        inp.type        = 'text';
+        icon.className  = 'fas fa-eye-slash';
+      } else {
+        inp.type        = 'password';
+        icon.className  = 'fas fa-eye';
+      }
+    }
+
+    /* ── show error ── */
+    function showError(msg) {
+      document.getElementById('errorText').textContent = msg;
+      document.getElementById('errorBox').classList.add('show');
+    }
+    function clearError() {
+      document.getElementById('errorBox').classList.remove('show');
+    }
+
+    /* ── toast ── */
+    function showToast(msg, ok) {
+      const t    = document.getElementById('toast');
+      const icon = t.querySelector('i');
+      icon.className  = ok === false ? 'fas fa-circle-xmark' : 'fas fa-check-circle';
+      icon.style.color = ok === false ? 'var(--red)' : 'var(--green)';
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    /* ── MAIN LOGIN FUNCTION ── */
+    function doLogin() {
+      clearError();
+      const username = (document.getElementById('username').value || '').trim();
+      const password = document.getElementById('password').value || '';
+      const role     = document.getElementById('selectedRole').value;
+
+      if (!username || !password) {
+        showError('Please enter your username and password.');
+        return;
+      }
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled  = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+      /* Only call POST /login — nothing else on this page */
+      fetch(API + '/login', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({ username, password, role }),
+      })
+      .then(r => r.json().then(body => ({ status: r.status, body })))
+      .then(({ status, body }) => {
+        if (status !== 200) {
+          throw new Error(body.error || 'Login failed');
+        }
+
+        /* ── Save user to localStorage (BOTH keys for compatibility) ── */
+        const user = body.user;
+        localStorage.setItem('gymUser',     JSON.stringify(user));
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        showToast('Welcome, ' + user.username + '!');
+
+        /* ── Redirect based on role ── */
+        setTimeout(() => {
+          if (user.role === 'admin')        window.location.href = 'dashboard.html';
+          else if (user.role === 'trainer') window.location.href = 'trainer-home.html';
+          else                              window.location.href = 'member-home.html';
+        }, 800);
+      })
+      .catch(err => {
+        showError(err.message || 'Login failed. Check your credentials.');
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Sign In';
+      });
+    }
+
+    /* ── theme ── */
+    function toggleTheme() {
+      const html = document.documentElement;
+      const dark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', dark ? 'light' : 'dark');
+      document.getElementById('themeBtn').textContent = dark ? '🌞' : '🌜';
+      localStorage.setItem('gymTheme', dark ? 'light' : 'dark');
+    }
+
+    /* ── init ── */
+    document.addEventListener('DOMContentLoaded', () => {
+      /* Restore theme */
+      const theme = localStorage.getItem('gymTheme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌜' : '🌞';
+
+      /* Pre-select role from URL e.g. login.html?role=admin */
+      const urlRole = new URLSearchParams(location.search).get('role');
+      if (urlRole) {
+        const tab = [...document.querySelectorAll('.role-tab')]
+          .find(t => t.textContent.trim().toLowerCase().startsWith(urlRole));
+        if (tab) setRole(urlRole, tab);
+      }
+
+      /* Enter key submits */
+      document.getElementById('password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+      });
+      document.getElementById('username').addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+      });
+
+      /* If already logged in, go straight to dashboard */
+      const existing = localStorage.getItem('gymUser');
+      if (existing) {
+        try {
+          const u = JSON.parse(existing);
+          if (u && u.username && u.role) {
+            if (u.role === 'admin')        window.location.href = 'dashboard.html';
+            else if (u.role === 'trainer') window.location.href = 'trainer-home.html';
+            else                           window.location.href = 'member-home.html';
+          }
+        } catch(e) {}
+      }
+    });
+  </script>
+</body>
+</html>

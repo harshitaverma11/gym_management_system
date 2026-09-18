@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Trainers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0c10;--surface:#111318;--surface2:#191d26;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;--accent:#3b82f6;--accent2:#6366f1;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--radius:14px;--sidebar-w:240px;--font-body:'DM Sans',sans-serif;--font-head:'Bebas Neue',sans-serif;--font-mono:'DM Mono',monospace;}
+    [data-theme="light"]{--bg:#f0f2f7;--surface:#fff;--surface2:#f8fafc;--border:rgba(0,0,0,0.08);--text:#1a1f2e;--muted:#94a3b8;}
+    html,body{height:100%;}
+    body{font-family:var(--font-body);background:var(--bg);color:var(--text);display:flex;overflow:hidden;}
+    a{text-decoration:none;color:inherit;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 24px;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:grid;place-items:center;font-size:16px;color:#fff;flex-shrink:0;}
+    .logo-text{font-family:var(--font-head);font-size:22px;letter-spacing:1px;}
+    .logo-text span{color:var(--accent);}
+    .sidebar-section{padding:20px 12px 8px;}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+    .sidebar a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:500;transition:all .18s;position:relative;}
+    .sidebar a:hover{background:var(--surface2);color:var(--text);}
+    .sidebar a.active{background:rgba(59,130,246,.12);color:var(--accent);}
+    .sidebar a.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .sidebar a i{width:18px;text-align:center;font-size:15px;}
+    .sidebar-footer{margin-top:auto;padding:16px 16px 0;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;}
+    .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;}
+    .user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;padding:8px 12px;border-radius:8px;width:100%;margin-top:6px;font-family:var(--font-body);transition:background .15s;}
+    .logout-btn:hover{background:rgba(239,68,68,.1);}
+    .main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;padding:32px 36px;}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;gap:20px;}
+    .page-title{font-family:var(--font-head);font-size:40px;letter-spacing:1px;line-height:1;}
+    .page-sub{color:var(--muted);font-size:14px;margin-top:6px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .icon-btn{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:opacity .15s,transform .15s;}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+
+    /* TRAINER CARDS GRID */
+    .trainers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;animation:fadeUp .4s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .trainer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform .2s,box-shadow .2s,border-color .2s;position:relative;overflow:hidden;}
+    .trainer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--yellow),#d97706);}
+    .trainer-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.3);border-color:rgba(234,179,8,.3);}
+    .trainer-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--yellow),#d97706);display:grid;place-items:center;font-family:var(--font-head);font-size:22px;color:#fff;margin-bottom:14px;}
+    .trainer-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+    .trainer-spec{font-size:12.5px;color:var(--accent);font-weight:500;margin-bottom:14px;}
+    .trainer-meta{display:flex;flex-direction:column;gap:8px;}
+    .meta-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
+    .meta-row i{width:14px;color:var(--accent);font-size:12px;}
+    .trainer-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+    .status-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .pill-active{background:rgba(34,197,94,.12);color:var(--green);}
+    .pill-inactive{background:rgba(239,68,68,.12);color:var(--red);}
+    .action-btns{display:flex;gap:6px;}
+    .act-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--muted);font-size:12px;cursor:pointer;display:grid;place-items:center;transition:all .15s;}
+    .act-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--accent);}
+    .act-btn.danger:hover{border-color:var(--red);color:var(--red);}
+    .id-badge{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+
+    /* TOOLBAR */
+    .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+    .search-wrap{position:relative;flex:1;min-width:200px;}
+    .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+    .search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px 9px 34px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .search-input::placeholder{color:var(--muted);}
+    .search-input:focus{border-color:var(--accent);}
+
+    /* STATS */
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .stat-card.yellow::before{background:linear-gradient(90deg,var(--yellow),#d97706);}
+    .stat-card.blue::before{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .stat-card.green::before{background:linear-gradient(90deg,var(--green),#16a34a);}
+    .stat-icon{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:15px;margin-bottom:12px;}
+    .yellow .stat-icon{background:rgba(234,179,8,.15);color:var(--yellow);}
+    .blue .stat-icon{background:rgba(59,130,246,.15);color:var(--accent);}
+    .green .stat-icon{background:rgba(34,197,94,.15);color:var(--green);}
+    .stat-val{font-family:var(--font-head);font-size:32px;letter-spacing:1px;line-height:1;margin-bottom:3px;}
+    .stat-lbl{font-size:12px;color:var(--muted);font-weight:500;}
+    .empty-state{text-align:center;padding:60px;color:var(--muted);}
+    .empty-state i{font-size:32px;margin-bottom:12px;display:block;opacity:.4;}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:480px;animation:fadeUp .3s ease both;}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+    .modal-title{font-family:var(--font-head);font-size:26px;letter-spacing:1px;}
+    .modal-close{width:32px;height:32px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s;}
+    .modal-close:hover{color:var(--red);border-color:var(--red);}
+    .form-group{margin-bottom:16px;}
+    .form-label{font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px;}
+    .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .form-control::placeholder{color:var(--muted);}
+    .form-control:focus{border-color:var(--accent);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+    .btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:9px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .15s;}
+    .btn-ghost:hover{border-color:var(--text);color:var(--text);}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    @media(max-width:860px){.sidebar{transform:translateX(-100%)}.main{margin-left:0;padding:20px;}}
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-dumbbell"></i></div><div class="logo-text">GYM<span>PRO</span></div></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Main</div>
+      <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+      <a href="members.html"><i class="fas fa-users"></i> Members</a>
+      <a href="trainers.html" class="active"><i class="fas fa-person"></i> Trainers</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Finance</div>
+      <a href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <a href="workouts.html"><i class="fas fa-fire"></i> Workouts</a>
+      <a href="chatbot.html"><i class="fas fa-robot"></i> AI Assistant</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card"><div class="user-avatar" id="userInitial">A</div><div><div class="user-name" id="sidebarUser">Admin</div><div class="user-role" id="sidebarRole">Administrator</div></div></div>
+      <button class="logout-btn" onclick="doLogout()"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><div class="page-title">TRAINERS</div><div class="page-sub">Manage your gym's training staff</div></div>
+      <div class="topbar-right">
+        <div class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌜</div>
+        <button class="btn-primary admin-only" onclick="openModal()"><i class="fas fa-plus"></i> Add Trainer</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card yellow"><div class="stat-icon"><i class="fas fa-person"></i></div><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">Total Trainers</div></div>
+      <div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-val" id="statActive">0</div><div class="stat-lbl">Active</div></div>
+      <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-dumbbell"></i></div><div class="stat-val" id="statSpec">—</div><div class="stat-lbl">Specializations</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap"><i class="fas fa-search"></i><input class="search-input" id="searchInput" placeholder="Search by name, phone or email…" oninput="filterTrainers()"></div>
+      <div class="icon-btn" onclick="loadTrainers()" title="Refresh"><i class="fas fa-arrows-rotate"></i></div>
+    </div>
+
+    <div class="trainers-grid" id="trainersGrid">
+      <div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-spinner fa-spin"></i>Loading trainers…</div>
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="trainerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">ADD TRAINER</div>
+        <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" id="fName" class="form-control" placeholder="e.g. Amit Kumar"></div>
+        <div class="form-group"><label class="form-label">Specialization</label><input type="text" id="fSpec" class="form-control" placeholder="e.g. Strength & Conditioning"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone *</label><input type="tel" id="fPhone" class="form-control" placeholder="9876543210"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" id="fEmail" class="form-control" placeholder="trainer@gym.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Experience (yrs)</label><input type="number" id="fExp" class="form-control" placeholder="5"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select id="fStatus" class="form-control"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveTrainer()"><i class="fas fa-save"></i> Save Trainer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
+
+  <script>
+    const API = 'http://127.0.0.1:5000';
+    let allTrainers = [];
+
+    function getUser() { try { return JSON.parse(localStorage.getItem('gymUser')) || JSON.parse(localStorage.getItem('currentUser')); } catch { return null; } }
+    function apiFetch(path, opts) {
+      opts = opts || {};
+      const user = getUser();
+      const headers = Object.assign({}, opts.headers || {});
+      if (!headers['Content-Type'] && opts.body) headers['Content-Type'] = 'application/json';
+      if (user) headers['X-User'] = JSON.stringify(user);
+      return fetch(API + path, { credentials: 'include', method: opts.method || 'GET', body: opts.body, headers });
+    }
+    function showToast(msg, type='success') {
+      const t = document.getElementById('toast');
+      t.querySelector('i').style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function loadTrainers() {
+      apiFetch('/trainers')
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(data => { allTrainers = data; renderCards(data); updateStats(data); })
+        .catch(() => {
+          document.getElementById('trainersGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-exclamation-triangle"></i>Could not connect to server.</div>`;
+        });
+    }
+
+    function updateStats(data) {
+      document.getElementById('statTotal').textContent = data.length;
+      document.getElementById('statActive').textContent = data.filter(t => (t.status||'active').toLowerCase() === 'active').length;
+      const specs = new Set(data.map(t => t.specialization || t.spec).filter(Boolean));
+      document.getElementById('statSpec').textContent = specs.size || '—';
+    }
+
+    function renderCards(data) {
+      const grid = document.getElementById('trainersGrid');
+      const role = getUser()?.role;
+      if (!data.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-person-circle-minus"></i>No trainers found</div>`;
+        return;
+      }
+      grid.innerHTML = data.map(t => {
+        const name = t.name || 'Unknown';
+        const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+        const status = (t.status || 'active').toLowerCase();
+        const actionsHtml = role === 'admin' ? `
+          <div class="action-btns">
+            <button class="act-btn" title="Edit" onclick="editTrainer(${t.trainer_id})"><i class="fas fa-pen"></i></button>
+            <button class="act-btn danger" title="Delete" onclick="deleteTrainer(${t.trainer_id},'${name}')"><i class="fas fa-trash"></i></button>
+          </div>` : '';
+        return `<div class="trainer-card">
+          <div class="trainer-avatar">${initials}</div>
+          <div class="trainer-name">${name}</div>
+          <div class="trainer-spec">${t.specialization || t.spec || 'General Fitness'}</div>
+          <div class="trainer-meta">
+            ${t.phone ? `<div class="meta-row"><i class="fas fa-phone"></i>${t.phone}</div>` : ''}
+            ${t.email ? `<div class="meta-row"><i class="fas fa-envelope"></i>${t.email}</div>` : ''}
+            ${t.experience ? `<div class="meta-row"><i class="fas fa-star"></i>${t.experience} yrs experience</div>` : ''}
+          </div>
+          <div class="trainer-footer">
+            <div>
+              <span class="status-pill pill-${status}">${status.charAt(0).toUpperCase()+status.slice(1)}</span>
+              <div class="id-badge" style="margin-top:4px;">#${t.trainer_id}</div>
+            </div>
+            ${actionsHtml}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function filterTrainers() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allTrainers.filter(t =>
+        (t.name||'').toLowerCase().includes(q) ||
+        (t.phone||'').toLowerCase().includes(q) ||
+        (t.email||'').toLowerCase().includes(q)
+      );
+      renderCards(filtered);
+    }
+
+    function openModal(t = null) {
+      document.getElementById('editId').value = t ? t.trainer_id : '';
+      document.getElementById('modalTitle').textContent = t ? 'EDIT TRAINER' : 'ADD TRAINER';
+      document.getElementById('fName').value  = t ? t.name : '';
+      document.getElementById('fSpec').value  = t ? (t.specialization || t.spec || '') : '';
+      document.getElementById('fPhone').value = t ? (t.phone || '') : '';
+      document.getElementById('fEmail').value = t ? (t.email || '') : '';
+      document.getElementById('fExp').value   = t ? (t.experience || '') : '';
+      document.getElementById('fStatus').value= t ? (t.status || 'active') : 'active';
+      document.getElementById('trainerModal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('trainerModal').classList.remove('open'); }
+
+    function editTrainer(id) { const t = allTrainers.find(t => t.trainer_id === id); if (t) openModal(t); }
+
+    function saveTrainer() {
+      const id   = document.getElementById('editId').value;
+      const name = document.getElementById('fName').value.trim();
+      if (!name) { showToast('Trainer name is required', 'error'); return; }
+
+      const payload = {
+        name,
+        phone:          document.getElementById('fPhone').value.trim() || '',
+        email:          document.getElementById('fEmail').value.trim() || '',
+        specialization: document.getElementById('fSpec').value.trim()  || '',
+        experience:     document.getElementById('fExp').value          || null,
+        status:         document.getElementById('fStatus').value       || 'active',
+      };
+
+      const path   = id ? '/trainers/' + id : '/trainers';
+      const method = id ? 'PUT' : 'POST';
+      const btn    = document.querySelector('#trainerModal .btn-primary');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…'; }
+
+      apiFetch(path, { method, body: JSON.stringify(payload) })
+        .then(r => {
+          if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'Save failed'); });
+          return r.json();
+        })
+        .then(() => {
+          closeModal();
+          loadTrainers();
+          showToast(id ? 'Trainer updated!' : 'Trainer added successfully!');
+        })
+        .catch(e => showToast(e.message || 'Save failed', 'error'))
+        .finally(() => {
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Trainer'; }
+        });
+    }
+
+    function deleteTrainer(id, name) {
+      if (!confirm('Delete trainer "' + name + '"? This cannot be undone.')) return;
+      apiFetch('/trainers/' + id, { method: 'DELETE' })
+        .then(r => { if (!r.ok) throw new Error('Delete failed'); return r.json(); })
+        .then(() => { loadTrainers(); showToast('Trainer deleted'); })
+        .catch(e => showToast(e.message || 'Delete failed', 'error'));
+    }
+
+    function doLogout() {
+      apiFetch('/logout', { method: 'POST' }).catch(() => {}).finally(() => {
+        localStorage.removeItem('gymUser');
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      });
+    }
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('themeBtn').textContent = isDark ? '🌞' : '🌜';
+      localStorage.setItem('gymTheme', isDark ? 'light' : 'dark');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('gymTheme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌜' : '🌞';
+      const user = getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      const name = user.username || user.name || 'User';
+      document.getElementById('sidebarUser').textContent = name;
+      document.getElementById('userInitial').textContent = name[0].toUpperCase();
+      document.getElementById('sidebarRole').textContent = (user.role||'user').charAt(0).toUpperCase()+(user.role||'user').slice(1);
+      if (user.role !== 'admin') document.querySelectorAll('.admin-only').forEach(e => e.remove());
+      loadTrainers();
+    });
+  </script>
+</body>
+</html>

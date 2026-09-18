@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GymPro — Memberships</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0c10;--surface:#111318;--surface2:#191d26;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;--accent:#3b82f6;--accent2:#6366f1;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--radius:14px;--sidebar-w:240px;--font-body:'DM Sans',sans-serif;--font-head:'Bebas Neue',sans-serif;--font-mono:'DM Mono',monospace;}
+    [data-theme="light"]{--bg:#f0f2f7;--surface:#fff;--surface2:#f8fafc;--border:rgba(0,0,0,0.08);--text:#1a1f2e;--muted:#94a3b8;}
+    html,body{height:100%;}body{font-family:var(--font-body);background:var(--bg);color:var(--text);display:flex;overflow:hidden;transition:background .3s,color .3s;}
+    a{text-decoration:none;color:inherit;}::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 24px;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:grid;place-items:center;font-size:16px;color:#fff;flex-shrink:0;}
+    .logo-text{font-family:var(--font-head);font-size:22px;letter-spacing:1px;}.logo-text span{color:var(--accent);}
+    .sidebar-section{padding:20px 12px 8px;}.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+    .sidebar a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:500;transition:all .18s;position:relative;}
+    .sidebar a:hover{background:var(--surface2);color:var(--text);}.sidebar a.active{background:rgba(59,130,246,.12);color:var(--accent);}
+    .sidebar a.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .sidebar a i{width:18px;text-align:center;font-size:15px;}
+    .sidebar-footer{margin-top:auto;padding:16px 16px 0;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;}
+    .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;}.user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;padding:8px 12px;border-radius:8px;width:100%;margin-top:6px;font-family:var(--font-body);transition:background .15s;}
+    .logout-btn:hover{background:rgba(239,68,68,.1);}
+    .main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;padding:32px 36px;}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:20px;}
+    .page-title{font-family:var(--font-head);font-size:40px;letter-spacing:1px;line-height:1;}
+    .page-sub{color:var(--muted);font-size:14px;margin-top:6px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .icon-btn{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.88;}
+
+    /* expiry alert banner */
+    .expiry-banner{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:none;animation:fadeUp .4s ease both;}
+    .expiry-banner.show{display:block;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .expiry-banner-title{color:var(--red);font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+    .expiry-list{display:flex;flex-direction:column;gap:6px;}
+    .expiry-item{display:flex;align-items:center;justify-content:space-between;background:rgba(239,68,68,.06);border-radius:8px;padding:8px 12px;font-size:13px;}
+    .expiry-name{font-weight:600;}
+    .expiry-days{font-family:var(--font-mono);font-size:11px;padding:2px 8px;border-radius:20px;}
+    .days-0{background:rgba(239,68,68,.2);color:var(--red);}
+    .days-few{background:rgba(234,179,8,.15);color:var(--yellow);}
+
+    /* stats */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .stat-card.blue::before{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .stat-card.green::before{background:linear-gradient(90deg,var(--green),#16a34a);}
+    .stat-card.yellow::before{background:linear-gradient(90deg,var(--yellow),#d97706);}
+    .stat-card.red::before{background:linear-gradient(90deg,var(--red),#dc2626);}
+    .stat-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:14px;margin-bottom:10px;}
+    .blue .stat-icon{background:rgba(59,130,246,.15);color:var(--accent);}
+    .green .stat-icon{background:rgba(34,197,94,.15);color:var(--green);}
+    .yellow .stat-icon{background:rgba(234,179,8,.15);color:var(--yellow);}
+    .red .stat-icon{background:rgba(239,68,68,.15);color:var(--red);}
+    .stat-val{font-family:var(--font-head);font-size:26px;letter-spacing:1px;line-height:1;margin-bottom:2px;}
+    .stat-lbl{font-size:12px;color:var(--muted);}
+
+    /* toolbar & table */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .search-wrap{position:relative;flex:1;min-width:200px;}
+    .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+    .search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px 9px 34px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+    .search-input:focus{border-color:var(--accent);}.search-input::placeholder{color:var(--muted);}
+    .filter-select{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 14px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;cursor:pointer;}
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;}
+    thead tr{border-bottom:1px solid var(--border);}
+    th{padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+    tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--surface2);}
+    td{padding:12px 18px;font-size:13.5px;vertical-align:middle;}
+    .member-name{font-weight:600;}.member-phone{font-size:11px;color:var(--muted);margin-top:2px;}
+    .plan-badge{display:inline-block;background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2);padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;}
+    .status-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .pill-active{background:rgba(34,197,94,.12);color:var(--green);}
+    .pill-expired{background:rgba(239,68,68,.12);color:var(--red);}
+    .pill-cancelled{background:rgba(107,114,128,.12);color:var(--muted);}
+    .days-badge{font-family:var(--font-mono);font-size:12px;padding:3px 8px;border-radius:6px;}
+    .days-ok{background:rgba(34,197,94,.1);color:var(--green);}
+    .days-warn{background:rgba(234,179,8,.1);color:var(--yellow);}
+    .days-over{background:rgba(239,68,68,.1);color:var(--red);}
+    .id-text{font-family:var(--font-mono);font-size:12px;color:var(--muted);}
+    .empty-state{text-align:center;padding:48px;color:var(--muted);}
+    .empty-state i{font-size:28px;margin-bottom:10px;display:block;opacity:.4;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-dumbbell"></i></div><div class="logo-text">GYM<span>PRO</span></div></div>
+  <div class="sidebar-section"><div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="members.html"><i class="fas fa-users"></i> Members</a>
+    <a href="trainers.html"><i class="fas fa-person"></i> Trainers</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Finance</div>
+    <a href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
+    <a href="plans.html"><i class="fas fa-id-card"></i> Plans</a>
+    <a href="memberships.html" class="active"><i class="fas fa-calendar-check"></i> Memberships</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Operations</div>
+    <a href="attendance.html"><i class="fas fa-clipboard-check"></i> Attendance</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Tools</div>
+    <a href="workouts.html"><i class="fas fa-fire"></i> Workouts</a>
+    <a href="chatbot.html"><i class="fas fa-robot"></i> AI Assistant</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="user-avatar" id="userInitial">A</div><div><div class="user-name" id="sidebarUser">Admin</div><div class="user-role" id="sidebarRole">Administrator</div></div></div>
+    <button class="logout-btn" onclick="doLogout()"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><div class="page-title">MEMBERSHIPS</div><div class="page-sub">Track active plans, renewals and expiry alerts</div></div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌜</div>
+      <div class="icon-btn" onclick="loadAll()" title="Refresh"><i class="fas fa-arrows-rotate"></i></div>
+      <button class="btn-primary" onclick="location.href='plans.html'"><i class="fas fa-plus"></i> Assign Plan</button>
+    </div>
+  </div>
+
+  <!-- Expiry Alert Banner -->
+  <div class="expiry-banner" id="expiryBanner">
+    <div class="expiry-banner-title"><i class="fas fa-triangle-exclamation"></i> Memberships Expiring Soon</div>
+    <div class="expiry-list" id="expiryList"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-val" id="statTotal">—</div><div class="stat-lbl">Total Memberships</div></div>
+    <div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-val" id="statActive">—</div><div class="stat-lbl">Active</div></div>
+    <div class="stat-card yellow"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-val" id="statExpiring">—</div><div class="stat-lbl">Expiring This Week</div></div>
+    <div class="stat-card red"><div class="stat-icon"><i class="fas fa-ban"></i></div><div class="stat-val" id="statExpired">—</div><div class="stat-lbl">Expired</div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap"><i class="fas fa-search"></i><input class="search-input" id="searchInput" placeholder="Search by member name…" oninput="filterTable()"></div>
+    <select class="filter-select" id="statusFilter" onchange="filterTable()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="expired">Expired</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Member</th><th>Plan</th><th>Start Date</th><th>End Date</th><th>Days Left</th><th>Paid</th><th>Status</th>
+        </tr></thead>
+        <tbody id="membershipsBody">
+          <tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
+
+<script>
+  const API = 'http://127.0.0.1:5000';
+  let allMemberships = [];
+
+  function getUser(){try{return JSON.parse(localStorage.getItem('gymUser'))||JSON.parse(localStorage.getItem('currentUser'))||null;}catch(e){return null;}}
+  function apiFetch(path,opts){opts=opts||{};const user=getUser();const headers=Object.assign({},opts.headers||{});if(!headers['Content-Type']&&opts.body)headers['Content-Type']='application/json';if(user)headers['X-User']=JSON.stringify(user);return fetch(API+path,{credentials:'include',method:opts.method||'GET',body:opts.body||undefined,headers});}
+  function showToast(msg,type){const t=document.getElementById('toast');t.querySelector('i').style.color=type==='error'?'var(--red)':'var(--green)';document.getElementById('toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+  function fmtDate(d){if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+
+  function loadAll(){loadMemberships();loadExpiring();}
+
+  function loadMemberships(){
+    apiFetch('/memberships').then(r=>r.json()).then(data=>{
+      allMemberships=data;renderTable(data);updateStats(data);
+    }).catch(err=>showToast('Failed to load: '+err.message,'error'));
+  }
+
+  function loadExpiring(){
+    apiFetch('/memberships/expiring').then(r=>r.json()).then(data=>{
+      const banner=document.getElementById('expiryBanner');
+      const list=document.getElementById('expiryList');
+      document.getElementById('statExpiring').textContent=data.length;
+      if(!data.length){banner.classList.remove('show');return;}
+      banner.classList.add('show');
+      list.innerHTML=data.map(e=>{
+        const d=parseInt(e.days_remaining);
+        const cls=d<=0?'days-0':'days-few';
+        const label=d<=0?'TODAY':d+'d left';
+        return `<div class="expiry-item">
+          <div><span class="expiry-name">${e.member_name}</span> — ${e.plan_name}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;color:var(--muted);">Expires ${fmtDate(e.end_date)}</span>
+            <span class="expiry-days ${cls}">${label}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }).catch(()=>{});
+  }
+
+  function updateStats(data){
+    const active   = data.filter(m=>m.status==='active').length;
+    const expired  = data.filter(m=>m.status==='expired'||(m.days_remaining!==null&&parseInt(m.days_remaining)<0)).length;
+    document.getElementById('statTotal').textContent  = data.length;
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statExpired').textContent= expired;
+  }
+
+  function renderTable(data){
+    const tbody=document.getElementById('membershipsBody');
+    if(!data.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-calendar-check"></i>No memberships found.<br><small>Go to <a href="plans.html" style="color:var(--accent)">Plans</a> to assign a plan to a member.</small></div></td></tr>';return;}
+    tbody.innerHTML=data.map(m=>{
+      const status=(m.status||'active').toLowerCase();
+      const pillCls=status==='active'?'pill-active':status==='cancelled'?'pill-cancelled':'pill-expired';
+      const days=m.days_remaining!==null?parseInt(m.days_remaining):null;
+      let daysCls='days-ok',daysLabel=days!==null?days+'d':'-';
+      if(days!==null&&days<=0){daysCls='days-over';daysLabel='Expired';}
+      else if(days!==null&&days<=7){daysCls='days-warn';}
+      return `<tr>
+        <td><div class="member-name">${m.member_name||'—'}</div><div class="member-phone">${m.member_phone||''}</div></td>
+        <td><span class="plan-badge">${m.plan_name||'—'}</span></td>
+        <td style="color:var(--muted);font-size:12.5px;">${fmtDate(m.start_date)}</td>
+        <td style="color:var(--muted);font-size:12.5px;">${fmtDate(m.end_date)}</td>
+        <td><span class="days-badge ${daysCls}">${daysLabel}</span></td>
+        <td><span style="font-family:var(--font-mono);font-size:13px;">₹${parseFloat(m.paid_amount||0).toLocaleString('en-IN')}</span></td>
+        <td><span class="status-pill ${pillCls}">${status.charAt(0).toUpperCase()+status.slice(1)}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterTable(){
+    const q=document.getElementById('searchInput').value.toLowerCase();
+    const st=document.getElementById('statusFilter').value.toLowerCase();
+    renderTable(allMemberships.filter(m=>{
+      const name=(m.member_name||'').toLowerCase();
+      const status=(m.status||'').toLowerCase();
+      return name.includes(q)&&(!st||status===st);
+    }));
+  }
+
+  function toggleTheme(){const html=document.documentElement;const dark=html.getAttribute('data-theme')==='dark';html.setAttribute('data-theme',dark?'light':'dark');document.getElementById('themeBtn').textContent=dark?'🌞':'🌜';localStorage.setItem('gymTheme',dark?'light':'dark');}
+  function doLogout(){apiFetch('/logout',{method:'POST'}).catch(()=>{}).finally(()=>{localStorage.removeItem('gymUser');localStorage.removeItem('currentUser');window.location.href='login.html';});}
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const theme=localStorage.getItem('gymTheme')||'dark';document.documentElement.setAttribute('data-theme',theme);document.getElementById('themeBtn').textContent=theme==='dark'?'🌜':'🌞';
+    const user=getUser();if(!user){window.location.href='login.html';return;}
+    document.getElementById('sidebarUser').textContent=user.username||'User';
+    document.getElementById('userInitial').textContent=(user.username||'A')[0].toUpperCase();
+    document.getElementById('sidebarRole').textContent=(user.role||'').charAt(0).toUpperCase()+(user.role||'').slice(1);
+    loadAll();
+  });
+</script>
+</body>
+</html>
