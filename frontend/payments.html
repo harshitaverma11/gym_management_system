@@ -220,14 +220,12 @@
       <option value="">All Status</option>
       <option value="paid">Paid</option>
       <option value="pending">Pending</option>
-      <option value="due">Due</option>
+      <option value="rejected">Rejected</option>
     </select>
     <select class="filter-select" id="methodFilter" onchange="filterTable()">
-      <option value="">All Methods</option>
+      <option value="">All Modes</option>
       <option value="cash">Cash</option>
-      <option value="upi">UPI</option>
-      <option value="card">Card</option>
-      <option value="bank_transfer">Bank Transfer</option>
+      <option value="online">Online</option>
     </select>
   </div>
 
@@ -239,14 +237,15 @@
           <tr>
             <th>Member</th>
             <th>Amount</th>
-            <th>Method</th>
+            <th>Mode</th>
+            <th>Transaction ID</th>
             <th>Status</th>
             <th>Date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="paymentsBody">
-          <tr><td colspan="6">
+          <tr><td colspan="7">
             <div class="empty-state">
               <i class="fas fa-spinner fa-spin"></i>
               Loading payments…
@@ -284,12 +283,10 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Payment Method</label>
-        <select id="fMethod" class="form-control">
+        <label class="form-label">Payment Mode</label>
+        <select id="fMethod" class="form-control" onchange="toggleTxnField()">
           <option value="cash">Cash</option>
-          <option value="upi">UPI</option>
-          <option value="card">Card</option>
-          <option value="bank_transfer">Bank Transfer</option>
+          <option value="online">Online</option>
         </select>
       </div>
       <div class="form-group">
@@ -297,9 +294,15 @@
         <select id="fStatus" class="form-control">
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
-          <option value="due">Due</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
+    </div>
+
+    <div class="form-group" id="txnIdGroup" style="display:none;">
+      <label class="form-label">Transaction ID *</label>
+      <input type="text" id="fTxnId" class="form-control"
+        placeholder="UPI transaction/reference ID">
     </div>
 
     <div class="form-group">
@@ -330,8 +333,9 @@
   <span id="toastMsg">Done!</span>
 </div>
 
+<script src="js/config.js"></script>
 <script>
-  const API = 'http://127.0.0.1:5000';
+  const API = window.GYM_API_BASE_URL;
   let allPayments = [];
   let allMembers  = [];   // cached for member lookup
 
@@ -395,7 +399,7 @@
   /* ── Load payments ── */
   function loadPayments() {
     document.getElementById('paymentsBody').innerHTML =
-      '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading…</div></td></tr>';
+      '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading…</div></td></tr>';
 
     apiFetch('/payments')
       .then(r => {
@@ -409,7 +413,7 @@
       })
       .catch(err => {
         document.getElementById('paymentsBody').innerHTML =
-          `<tr><td colspan="6"><div class="empty-state">
+          `<tr><td colspan="7"><div class="empty-state">
             <i class="fas fa-circle-xmark"></i>
             Failed to load: ${err.message}
           </div></td></tr>`;
@@ -426,7 +430,7 @@
       .reduce((s, p) => s + (parseFloat(p.amount)||0), 0);
 
     const due = data
-      .filter(p => ['due','pending'].includes((p.status||'').toLowerCase()))
+      .filter(p => (p.status||'').toLowerCase() === 'pending')
       .reduce((s, p) => s + (parseFloat(p.amount)||0), 0);
 
     const monthly = data
@@ -449,7 +453,7 @@
     const role  = getUser() ? getUser().role : '';
 
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
         <i class="fas fa-receipt"></i>
         No payment records found.<br>
         <small style="margin-top:6px;display:block;">
@@ -467,17 +471,22 @@
       const amtCls   = status === 'paid' ? 'amount-paid'
                      : status === 'pending' ? 'amount-pending'
                      : 'amount-due';
-      const method   = (p.method || p.payment_method || 'cash')
-                        .replace('_',' ').toUpperCase();
+      const method   = (p.method || p.payment_method || 'cash').toUpperCase();
       const date     = p.payment_date || p.date || '';
       const pid      = p.payment_id || p.id;
       const mName    = p.member_name || p.name || '—';
       const mId      = p.member_id || '—';
+      const txnId    = p.transaction_id || '—';
+
+      const verifyBtns = (role === 'admin' && status === 'pending') ? `
+        <button class="act-btn success" title="Approve"
+          onclick="verifyPayment(${pid},'approve')"><i class="fas fa-check"></i></button>
+        <button class="act-btn danger" title="Reject"
+          onclick="verifyPayment(${pid},'reject')"><i class="fas fa-xmark"></i></button>` : '';
 
       const actions = role === 'admin' ? `
         <div class="action-btns">
-          ${status !== 'paid' ? `<button class="act-btn success" title="Mark as Paid"
-            onclick="markPaid(${pid})"><i class="fas fa-check"></i></button>` : ''}
+          ${verifyBtns}
           <button class="act-btn" title="Edit" onclick="editPayment(${pid})">
             <i class="fas fa-pen"></i>
           </button>
@@ -497,6 +506,7 @@
           </span>
         </td>
         <td><span class="method-badge">${method}</span></td>
+        <td style="color:var(--muted);font-size:12.5px;">${txnId}</td>
         <td><span class="status-pill ${pillCls}">
           ${status.charAt(0).toUpperCase() + status.slice(1)}
         </span></td>
@@ -537,6 +547,12 @@
     }
   }
 
+  /* ── Toggle transaction ID field based on payment mode ── */
+  function toggleTxnField() {
+    const isOnline = document.getElementById('fMethod').value === 'online';
+    document.getElementById('txnIdGroup').style.display = isOnline ? 'block' : 'none';
+  }
+
   /* ── Open modal ── */
   function openModal(p) {
     document.getElementById('editId').value    = p ? (p.payment_id || p.id || '') : '';
@@ -545,11 +561,13 @@
     document.getElementById('fAmount').value   = p ? (p.amount || '') : '';
     document.getElementById('fMethod').value   = p ? (p.method || p.payment_method || 'cash') : 'cash';
     document.getElementById('fStatus').value   = p ? (p.status || 'paid') : 'paid';
+    document.getElementById('fTxnId').value    = p ? (p.transaction_id || '') : '';
     document.getElementById('fDate').value     = p
       ? ((p.payment_date || p.date || '').split('T')[0] || new Date().toISOString().split('T')[0])
       : new Date().toISOString().split('T')[0];
     document.getElementById('fNotes').value    = p ? (p.notes || '') : '';
     document.getElementById('memberHint').innerHTML = 'Enter the member\'s ID number';
+    toggleTxnField();
 
     // If editing, show member name in hint
     if (p && p.member_name) {
@@ -588,23 +606,32 @@
       return;
     }
 
+    const method = document.getElementById('fMethod').value || 'cash';
+    const txnId  = document.getElementById('fTxnId').value.trim();
+    if (method === 'online' && !txnId) {
+      showToast('Transaction ID is required for online payments', 'error');
+      document.getElementById('fTxnId').focus();
+      return;
+    }
+
     const payload = {
-      member_id: parseInt(memberId),
-      amount:    parseFloat(amount),
-      method:    document.getElementById('fMethod').value  || 'cash',
-      status:    document.getElementById('fStatus').value  || 'paid',
-      date:      document.getElementById('fDate').value    || null,
-      notes:     document.getElementById('fNotes').value   || null,
+      member_id:      parseInt(memberId),
+      amount:         parseFloat(amount),
+      method:         method,
+      status:         document.getElementById('fStatus').value  || 'paid',
+      transaction_id: method === 'online' ? txnId : '',
+      date:           document.getElementById('fDate').value    || null,
+      notes:          document.getElementById('fNotes').value   || null,
     };
 
-    const path   = id ? '/payments/' + id : '/payments';
-    const method = id ? 'PUT' : 'POST';
+    const path       = id ? '/payments/' + id : '/payments';
+    const httpMethod = id ? 'PUT' : 'POST';
 
     const btn = document.getElementById('saveBtn');
     btn.disabled  = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
 
-    apiFetch(path, { method: method, body: JSON.stringify(payload) })
+    apiFetch(path, { method: httpMethod, body: JSON.stringify(payload) })
       .then(r => {
         if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'Save failed'); });
         return r.json();
@@ -621,23 +648,18 @@
       });
   }
 
-  /* ── Mark as paid ── */
-  function markPaid(id) {
-    if (!confirm('Mark this payment as Paid?')) return;
-    const p = allPayments.find(x => (x.payment_id || x.id) === id);
-    if (!p) return;
-    const payload = {
-      member_id: p.member_id,
-      amount:    p.amount,
-      method:    p.method || 'cash',
-      status:    'paid',
-      date:      p.payment_date || p.date || new Date().toISOString().split('T')[0],
-      notes:     p.notes || null,
-    };
-    apiFetch('/payments/' + id, { method: 'PUT', body: JSON.stringify(payload) })
-      .then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); })
-      .then(() => { loadPayments(); showToast('Marked as paid! ✓'); })
-      .catch(e  => showToast(e.message || 'Failed', 'error'));
+  /* ── Approve / reject a pending online payment ── */
+  function verifyPayment(id, action) {
+    const label = action === 'approve' ? 'approve' : 'reject';
+    if (!confirm(`Are you sure you want to ${label} this payment?`)) return;
+    apiFetch('/payments/' + id + '/verify', { method: 'POST', body: JSON.stringify({ action }) })
+      .then(r => r.json().then(body => ({ ok: r.ok, body })))
+      .then(({ ok, body }) => {
+        if (!ok) throw new Error(body.error || 'Failed');
+        loadPayments();
+        showToast(action === 'approve' ? 'Payment approved! ✓' : 'Payment rejected');
+      })
+      .catch(e => showToast(e.message || 'Failed', 'error'));
   }
 
   /* ── Delete payment ── */

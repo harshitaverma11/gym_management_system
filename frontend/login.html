@@ -317,13 +317,88 @@
       </div>
     </div>
 
+    <div id="signupFields" style="display:none;">
+      <div class="field">
+        <label>Confirm Password</label>
+        <div class="input-wrap">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" id="suConfirmPassword" placeholder="Repeat password" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="field">
+        <label>Full Name</label>
+        <div class="input-wrap">
+          <i class="fas fa-id-card input-icon"></i>
+          <input type="text" id="suFullName" placeholder="e.g. Rahul Singh">
+        </div>
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <div class="input-wrap">
+          <i class="fas fa-phone input-icon"></i>
+          <input type="tel" id="suPhone" placeholder="9876543210">
+        </div>
+      </div>
+      <div class="field">
+        <label>Age</label>
+        <div class="input-wrap">
+          <i class="fas fa-cake-candles input-icon"></i>
+          <input type="number" id="suAge" placeholder="25">
+        </div>
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <div class="input-wrap">
+          <i class="fas fa-venus-mars input-icon"></i>
+          <select id="suGender" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px 11px 38px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;">
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="O">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Address</label>
+        <div class="input-wrap">
+          <i class="fas fa-location-dot input-icon"></i>
+          <input type="text" id="suAddress" placeholder="Street address">
+        </div>
+      </div>
+      <div class="field">
+        <label>City</label>
+        <div class="input-wrap">
+          <i class="fas fa-city input-icon"></i>
+          <input type="text" id="suCity" placeholder="e.g. Mumbai">
+        </div>
+      </div>
+      <div class="field">
+        <label>Emergency Contact</label>
+        <div class="input-wrap">
+          <i class="fas fa-phone-volume input-icon"></i>
+          <input type="tel" id="suEmergencyContact" placeholder="9876500000">
+        </div>
+      </div>
+      <div class="field">
+        <label>Joining Date</label>
+        <div class="input-wrap">
+          <i class="fas fa-calendar input-icon"></i>
+          <input type="date" id="suJoinDate">
+        </div>
+      </div>
+    </div>
+
     <input type="hidden" id="selectedRole" value="admin">
 
     <button class="btn-login" id="loginBtn" onclick="doLogin()">
       <i class="fas fa-arrow-right-to-bracket"></i> Sign In
     </button>
 
+    <button type="button" class="btn-login" id="signupBtn" onclick="doSignup()" style="display:none;">
+      <i class="fas fa-user-plus"></i> Create Member Account
+    </button>
+
     <div class="form-footer">
+      <a href="#" id="signupLink" onclick="toggleSignup(); return false;">New member? Create an account</a><br>
       <a href="index.html"><i class="fas fa-arrow-left"></i> Back to home</a>
     </div>
   </div>
@@ -333,13 +408,15 @@
     <span id="toastMsg">Done!</span>
   </div>
 
+  <script src="js/config.js"></script>
   <script>
     /* ════════════════════════════════════════════════════
        LOGIN PAGE — only calls POST /login
        NO calls to /members, /trainers or any other API
     ════════════════════════════════════════════════════ */
 
-    const API = 'http://127.0.0.1:5000';
+    const API = window.GYM_API_BASE_URL;
+    let signupMode = false;
 
     /* ── role selector ── */
     function setRole(role, el) {
@@ -368,6 +445,19 @@
     }
     function clearError() {
       document.getElementById('errorBox').classList.remove('show');
+    }
+
+    function toggleSignup() {
+      signupMode = !signupMode;
+      document.querySelector('.form-title').textContent = signupMode ? 'Create Member Account' : 'Welcome Back';
+      document.querySelector('.form-sub').textContent = signupMode ? 'Register for your GymPro member account' : 'Sign in to your GymPro account';
+      document.querySelector('.role-tabs').style.display = signupMode ? 'none' : 'flex';
+      document.getElementById('loginBtn').style.display = signupMode ? 'none' : 'block';
+      document.getElementById('signupBtn').style.display = signupMode ? 'block' : 'none';
+      document.getElementById('signupFields').style.display = signupMode ? 'block' : 'none';
+      document.getElementById('signupLink').textContent = signupMode ? 'Already have an account? Sign in' : 'New member? Create an account';
+      document.getElementById('selectedRole').value = 'member';
+      clearError();
     }
 
     /* ── toast ── */
@@ -425,10 +515,58 @@
         }, 800);
       })
       .catch(err => {
-        showError(err.message || 'Login failed. Check your credentials.');
+        const message = err && err.message === 'Failed to fetch'
+          ? 'Cannot reach the backend API. Start the backend server or update js/config.js with the deployed API URL.'
+          : (err.message || 'Login failed. Check your credentials.');
+        showError(message);
         btn.disabled  = false;
         btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Sign In';
       });
+    }
+
+    function doSignup() {
+      clearError();
+      const username        = (document.getElementById('username').value || '').trim();
+      const password        = document.getElementById('password').value || '';
+      const confirmPassword = document.getElementById('suConfirmPassword').value || '';
+      const fullName        = (document.getElementById('suFullName').value || '').trim();
+      const phone           = (document.getElementById('suPhone').value || '').trim();
+      const age             = document.getElementById('suAge').value;
+      const gender          = document.getElementById('suGender').value;
+      const address         = (document.getElementById('suAddress').value || '').trim();
+      const city            = (document.getElementById('suCity').value || '').trim();
+      const emergencyContact = (document.getElementById('suEmergencyContact').value || '').trim();
+      const joinDate        = document.getElementById('suJoinDate').value || null;
+
+      if (!username || !password) { showError('Please enter a username and password.'); return; }
+      if (password !== confirmPassword) { showError('Passwords do not match.'); return; }
+      if (!fullName) { showError('Full name is required.'); return; }
+      if (!phone) { showError('Phone number is required.'); return; }
+      if (!age) { showError('Age is required.'); return; }
+      if (!address) { showError('Address is required.'); return; }
+      if (!city) { showError('City is required.'); return; }
+      if (!emergencyContact) { showError('Emergency contact is required.'); return; }
+
+      const btn = document.getElementById('signupBtn');
+      btn.disabled = true;
+      fetch(API + '/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username, password, confirm_password: confirmPassword,
+          full_name: fullName, phone, age, gender, address, city,
+          emergency_contact: emergencyContact, join_date: joinDate,
+        })
+      })
+      .then(r => r.json().then(body => ({ status: r.status, body })))
+      .then(({ status, body }) => {
+        if (status !== 201) throw new Error(body.error || 'Signup failed');
+        localStorage.setItem('gymUser', JSON.stringify(body.user));
+        localStorage.setItem('currentUser', JSON.stringify(body.user));
+        window.location.href = 'member-home.html';
+      })
+      .catch(err => showError(err.message || 'Could not create account.'))
+      .finally(() => { btn.disabled = false; });
     }
 
     /* ── theme ── */

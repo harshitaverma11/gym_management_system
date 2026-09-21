@@ -17,7 +17,9 @@ except ImportError:
 # ── Ensure tables exist on startup ───────────────────────────────────────────
 import create_users_table
 import create_workouts_table
+import create_core_tables
 create_users_table.ensure_users_table()
+create_core_tables.ensure_core_tables()
 
 # ── Import routes ─────────────────────────────────────────────────────────────
 import routes
@@ -59,6 +61,12 @@ app.config.update(
 )
 
 # ── Security headers (applied to every response) ─────────────────────────────
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+
 @app.after_request
 def add_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -103,6 +111,7 @@ def health():
 #  AUTH ROUTES
 # ══════════════════════════════════════════════════════════════════════════════
 app.add_url_rule("/login",    "login",    routes.login,    methods=["POST",   "OPTIONS"])
+app.add_url_rule("/signup",   "signup",   routes.signup,   methods=["POST",   "OPTIONS"])
 app.add_url_rule("/logout",   "logout",   routes.logout,   methods=["POST",   "OPTIONS"])
 app.add_url_rule("/add_user", "add_user", routes.add_user, methods=["POST",   "OPTIONS"])
 
@@ -133,8 +142,10 @@ app.add_url_rule("/delete_trainer/<int:id>","delete_trainer_l",    routes.delete
 # ══════════════════════════════════════════════════════════════════════════════
 app.add_url_rule("/payments",              "get_payments",         routes.get_payments,   methods=["GET",    "OPTIONS"])
 app.add_url_rule("/payments",              "add_payment",          routes.add_payment,    methods=["POST",   "OPTIONS"])
+app.add_url_rule("/payments/member",       "member_add_payment",   routes.member_add_payment, methods=["POST", "OPTIONS"])
 app.add_url_rule("/payments/<int:id>",     "update_payment",       routes.update_payment, methods=["PUT",    "OPTIONS"])
 app.add_url_rule("/payments/<int:id>",     "delete_payment",       routes.delete_payment, methods=["DELETE", "OPTIONS"])
+app.add_url_rule("/payments/<int:id>/verify", "verify_payment",    routes.verify_payment, methods=["POST",   "OPTIONS"])
 app.add_url_rule("/add_payment",           "add_payment_l",        routes.add_payment,    methods=["POST",   "OPTIONS"])
 
 # ══════════════════════════════════════════════════════════════════════════════

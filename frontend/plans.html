@@ -183,8 +183,9 @@
 
 <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
 
+<script src="js/config.js"></script>
 <script>
-  const API = 'http://127.0.0.1:5000';
+  const API = window.GYM_API_BASE_URL;
   let allPlans = [], allMembers = [];
 
   function getUser(){try{return JSON.parse(localStorage.getItem('gymUser'))||JSON.parse(localStorage.getItem('currentUser'))||null;}catch(e){return null;}}

@@ -38,8 +38,9 @@
   <h2>Results</h2>
   <div id="output"></div>
 
+  <script src="js/config.js"></script>
   <script>
-    const API = 'http://127.0.0.1:5000';
+    const API = window.GYM_API_BASE_URL;
 
     function log(msg, type) {
       const d = document.getElementById('output');

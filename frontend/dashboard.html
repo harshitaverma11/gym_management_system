@@ -544,8 +544,9 @@
   <span id="toastMsg">Done!</span>
 </div>
 
+<script src="js/config.js"></script>
 <script>
-  const API = 'http://127.0.0.1:5000';
+  const API = window.GYM_API_BASE_URL;
   let allMembers = [];
 
   /* ─── helpers ───────────────────────────────────── */
@@ -829,6 +830,10 @@
     // auth guard
     const user = getUser();
     if (!user) { window.location.href = 'login.html'; return; }
+    if (user.role !== 'admin' && user.role !== 'trainer') {
+      window.location.href = user.role === 'member' ? 'member-home.html' : 'login.html';
+      return;
+    }
 
     // populate user info
     const name = user.username || 'User';

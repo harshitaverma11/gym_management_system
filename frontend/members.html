@@ -240,11 +240,25 @@
       <input type="hidden" id="editId">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Full Name *</label><input type="text" id="fName" class="form-control" placeholder="e.g. Rahul Singh"></div>
-        <div class="form-group"><label class="form-label">Age</label><input type="number" id="fAge" class="form-control" placeholder="25"></div>
+        <div class="form-group"><label class="form-label">Age *</label><input type="number" id="fAge" class="form-control" placeholder="25"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Phone *</label><input type="tel" id="fPhone" class="form-control" placeholder="9876543210"></div>
-        <div class="form-group"><label class="form-label">Email</label><input type="email" id="fEmail" class="form-control" placeholder="email@example.com"></div>
+        <div class="form-group"><label class="form-label">Gender</label>
+          <select id="fGender" class="form-control">
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="O">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Address *</label><input type="text" id="fAddress" class="form-control" placeholder="Street address"></div>
+        <div class="form-group"><label class="form-label">City *</label><input type="text" id="fCity" class="form-control" placeholder="e.g. Mumbai"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Emergency Contact *</label><input type="tel" id="fEmergencyContact" class="form-control" placeholder="9876500000"></div>
+        <div class="form-group"><label class="form-label">Join Date</label><input type="date" id="fDate" class="form-control"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Status</label>
@@ -254,7 +268,17 @@
             <option value="inactive">Inactive</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Join Date</label><input type="date" id="fDate" class="form-control"></div>
+        <div class="form-group"></div>
+      </div>
+      <div id="memberLoginFields">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Username/Email *</label><input type="text" id="fUsername" class="form-control" placeholder="member@gym.com" autocomplete="username"></div>
+          <div class="form-group"><label class="form-label">Password *</label><input type="password" id="fPassword" class="form-control" placeholder="Minimum 6 characters" autocomplete="new-password"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" id="fConfirmPassword" class="form-control" placeholder="Repeat password" autocomplete="new-password"></div>
+          <div class="form-group"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" onclick="closeModal()">Cancel</button>
@@ -266,8 +290,9 @@
   <!-- Toast -->
   <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
 
+  <script src="js/config.js"></script>
   <script>
-    const API = 'http://127.0.0.1:5000';
+    const API = window.GYM_API_BASE_URL;
     let allMembers = [];
     let currentPage = 1;
     const perPage = 10;
@@ -383,9 +408,16 @@
       document.getElementById('fName').value  = member ? member.name : '';
       document.getElementById('fAge').value   = member ? (member.age || '') : '';
       document.getElementById('fPhone').value = member ? member.phone : '';
-      document.getElementById('fEmail').value = member ? (member.email || '') : '';
+      document.getElementById('fGender').value = member ? (member.gender || 'M') : 'M';
+      document.getElementById('fAddress').value = member ? (member.address || '') : '';
+      document.getElementById('fCity').value  = member ? (member.city || '') : '';
+      document.getElementById('fEmergencyContact').value = member ? (member.emergency_contact || '') : '';
       document.getElementById('fStatus').value = member ? (member.status || 'active') : 'active';
       document.getElementById('fDate').value  = member ? (member.join_date || '') : new Date().toISOString().split('T')[0];
+      document.getElementById('memberLoginFields').style.display = member ? 'none' : 'block';
+      document.getElementById('fUsername').value = '';
+      document.getElementById('fPassword').value = '';
+      document.getElementById('fConfirmPassword').value = '';
       document.getElementById('memberModal').classList.add('open');
     }
     function closeModal() { document.getElementById('memberModal').classList.remove('open'); }
@@ -396,19 +428,42 @@
     }
 
     function saveMember() {
-      const id    = document.getElementById('editId').value;
-      const name  = document.getElementById('fName').value.trim();
-      const phone = document.getElementById('fPhone').value.trim();
+      const id      = document.getElementById('editId').value;
+      const name    = document.getElementById('fName').value.trim();
+      const phone   = document.getElementById('fPhone').value.trim();
+      const age     = document.getElementById('fAge').value;
+      const address = document.getElementById('fAddress').value.trim();
+      const city    = document.getElementById('fCity').value.trim();
+      const emergencyContact = document.getElementById('fEmergencyContact').value.trim();
       if (!name || !phone) { showToast('Name and phone are required', 'error'); return; }
+      if (!age)     { showToast('Age is required', 'error'); return; }
+      if (!address) { showToast('Address is required', 'error'); return; }
+      if (!city)    { showToast('City is required', 'error'); return; }
+      if (!emergencyContact) { showToast('Emergency contact is required', 'error'); return; }
 
       const payload = {
         name,
         phone,
-        age:       document.getElementById('fAge').value    || null,
-        email:     document.getElementById('fEmail').value  || '',
-        status:    document.getElementById('fStatus').value || 'active',
-        join_date: document.getElementById('fDate').value   || null,
+        age,
+        gender:            document.getElementById('fGender').value || 'M',
+        address,
+        city,
+        emergency_contact: emergencyContact,
+        status:            document.getElementById('fStatus').value || 'active',
+        join_date:         document.getElementById('fDate').value   || null,
       };
+
+      if (!id) {
+        const username = document.getElementById('fUsername').value.trim();
+        const password = document.getElementById('fPassword').value;
+        const confirmPassword = document.getElementById('fConfirmPassword').value;
+        if (!username) { showToast('Username/email is required', 'error'); return; }
+        if (!password || password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+        if (password !== confirmPassword) { showToast('Passwords do not match', 'error'); return; }
+        payload.username = username;
+        payload.password = password;
+        payload.confirm_password = confirmPassword;
+      }
 
       const path   = id ? '/members/' + id : '/members';
       const method = id ? 'PUT' : 'POST';

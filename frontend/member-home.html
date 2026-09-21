@@ -173,6 +173,40 @@
     .tip-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
     .tip-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
+    /* ── PAYMENTS ── */
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; transition: opacity .15s, transform .15s; }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+    .payments-table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 28px; }
+    .payments-table-card table { width: 100%; border-collapse: collapse; }
+    .payments-table-card th { padding: 11px 18px; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); }
+    .payments-table-card td { padding: 12px 18px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .payments-table-card tr:last-child td { border-bottom: none; }
+    .status-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .pill-paid { background: rgba(34,197,94,.12); color: var(--green); }
+    .pill-pending { background: rgba(234,179,8,.12); color: var(--yellow); }
+    .pill-rejected { background: rgba(239,68,68,.12); color: var(--red); }
+
+    /* ── PAYMENT MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 440px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-family: var(--font-head); font-size: 24px; letter-spacing: 1px; }
+    .modal-close { width: 32px; height: 32px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; display: grid; place-items: center; font-size: 14px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
+    .form-control { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 11px 14px; color: var(--text); font-size: 14px; font-family: var(--font-body); outline: none; }
+    .mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .mode-tab { padding: 10px 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .mode-tab.active { border-color: var(--accent); background: rgba(59,130,246,.1); color: var(--accent); }
+    .cash-note { background: rgba(234,179,8,.08); border: 1px solid rgba(234,179,8,.25); color: var(--yellow); border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.6; }
+    .qr-box { text-align: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+    .qr-box img { width: 200px; height: 200px; border-radius: 10px; }
+    .upi-id { font-family: var(--font-mono); font-size: 14px; margin-top: 10px; color: var(--text); font-weight: 600; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 9px; font-size: 13px; font-family: var(--font-body); cursor: pointer; }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
     /* ── TOAST ── */
     .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.4); transform: translateY(80px); opacity: 0; transition: all .3s ease; z-index: 9999; }
     .toast.show { transform: translateY(0); opacity: 1; }
@@ -309,6 +343,33 @@
     </div>
   </div>
 
+  <!-- Payments Section -->
+  <div class="section-header">
+    <div class="section-title">MY PAYMENTS</div>
+    <button class="btn-primary" onclick="openPaymentModal()">
+      <i class="fas fa-credit-card"></i> Make Payment
+    </button>
+  </div>
+
+  <div class="payments-table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Amount</th>
+          <th>Mode</th>
+          <th>Transaction ID</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="paymentsBody">
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">
+          <i class="fas fa-spinner fa-spin"></i> Loading payments…
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <!-- Workouts Section -->
   <div class="section-header">
     <div class="section-title">MY WORKOUT PROGRAMS</div>
@@ -325,13 +386,71 @@
 
 </main>
 
+<!-- Payment Modal -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">MAKE PAYMENT</div>
+      <button class="modal-close" onclick="closePaymentModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Amount (₹) *</label>
+      <input type="number" id="payAmount" class="form-control" placeholder="e.g. 2500" min="1" step="1" oninput="if (selectedPayMode === 'online') updateQrImage();">
+    </div>
+
+    <label class="form-label">Payment Mode</label>
+    <div class="mode-tabs">
+      <div class="mode-tab active" id="tabCash" onclick="setPaymentMode('cash')">
+        <i class="fas fa-money-bill-wave"></i> Cash
+      </div>
+      <div class="mode-tab" id="tabOnline" onclick="setPaymentMode('online')">
+        <i class="fas fa-qrcode"></i> Online
+      </div>
+    </div>
+
+    <!-- Cash instructions -->
+    <div id="cashPanel">
+      <div class="cash-note">
+        <i class="fas fa-circle-info"></i>
+        Cash payments must be made in person at the gym reception.
+        Please pay the admin/front desk — they will record your payment here.
+      </div>
+    </div>
+
+    <!-- Online / UPI panel -->
+    <div id="onlinePanel" style="display:none;">
+      <div class="qr-box">
+        <img id="upiQrImg" src="QR.png.jpeg" alt="UPI QR Code">
+        <div class="upi-id" id="upiIdText">harshita1103@ybl</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">UPI Transaction / Reference ID *</label>
+        <input type="text" id="payTxnId" class="form-control" placeholder="e.g. 123456789012">
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">
+        Scan the QR code using any UPI app, complete the payment, then enter the transaction/reference ID above.
+        Your payment will show as <strong>Pending</strong> until the admin verifies it.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closePaymentModal()"><i class="fas fa-times"></i> Cancel</button>
+      <button class="btn-primary" id="submitPayBtn" onclick="submitPayment()">
+        <i class="fas fa-paper-plane"></i> Submit
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <i class="fas fa-check-circle" style="color:var(--green);"></i>
   <span id="toastMsg">Done!</span>
 </div>
 
+<script src="js/config.js"></script>
 <script>
-  const API = 'http://127.0.0.1:5000';
+  const API = window.GYM_API_BASE_URL;
 
   /* ── Auth helpers ── */
   function getUser() {
@@ -399,6 +518,110 @@
     const dt = new Date(d);
     if (isNaN(dt)) return d;
     return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function fmtINR(n) {
+    n = parseFloat(n) || 0;
+    return '₹' + n.toLocaleString('en-IN');
+  }
+
+  /* ── UPI config (display-only; no banking data is stored) ── */
+  const GYM_UPI_ID = 'harshita1103@ybl';
+
+  /* ── Payments: load own history (server already filters to this member) ── */
+  function loadPayments() {
+    apiFetch('/payments')
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(renderPayments)
+      .catch(() => {
+        document.getElementById('paymentsBody').innerHTML =
+          `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">
+            Could not load payments.
+          </td></tr>`;
+      });
+  }
+
+  function renderPayments(data) {
+    const tbody = document.getElementById('paymentsBody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">
+        No payments yet. Click <strong>Make Payment</strong> to get started.
+      </td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(p => {
+      const status  = (p.status || 'paid').toLowerCase();
+      const pillCls = status === 'paid' ? 'pill-paid' : status === 'pending' ? 'pill-pending' : 'pill-rejected';
+      return `<tr>
+        <td>${fmtINR(p.amount)}</td>
+        <td>${(p.method || 'cash').toUpperCase()}</td>
+        <td>${p.transaction_id || '—'}</td>
+        <td><span class="status-pill ${pillCls}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+        <td style="color:var(--muted);font-size:12.5px;">${fmtDate(p.payment_date)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Payment modal ── */
+  let selectedPayMode = 'cash';
+
+  function setPaymentMode(mode) {
+    selectedPayMode = mode;
+    document.getElementById('tabCash').classList.toggle('active', mode === 'cash');
+    document.getElementById('tabOnline').classList.toggle('active', mode === 'online');
+    document.getElementById('cashPanel').style.display   = mode === 'cash'   ? 'block' : 'none';
+    document.getElementById('onlinePanel').style.display = mode === 'online' ? 'block' : 'none';
+    document.getElementById('submitPayBtn').style.display = mode === 'cash' ? 'none' : 'inline-flex';
+    if (mode === 'online') updateQrImage();
+  }
+
+  function updateQrImage() {
+    const amount = parseFloat(document.getElementById('payAmount').value) || 0;
+    const upiUri = `upi://pay?pa=${encodeURIComponent(GYM_UPI_ID)}&pn=GymPro${amount ? '&am=' + amount : ''}&cu=INR`;
+    document.getElementById('upiQrImg').src =
+      'QR.png.jpeg';
+    document.getElementById('upiIdText').textContent = GYM_UPI_ID;
+  }
+
+  function openPaymentModal() {
+    document.getElementById('payAmount').value = '';
+    document.getElementById('payTxnId').value  = '';
+    setPaymentMode('cash');
+    document.getElementById('paymentModal').classList.add('open');
+  }
+
+  function closePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('open');
+  }
+
+  function submitPayment() {
+    const amount = document.getElementById('payAmount').value;
+    if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount', 'error'); return; }
+
+    if (selectedPayMode === 'cash') {
+      showToast('Please pay at the gym reception. Admin will record it.');
+      closePaymentModal();
+      return;
+    }
+
+    const txnId = document.getElementById('payTxnId').value.trim();
+    if (!txnId) { showToast('Please enter the UPI transaction/reference ID', 'error'); return; }
+
+    const btn = document.getElementById('submitPayBtn');
+    btn.disabled = true;
+    apiFetch('/payments/member', {
+      method: 'POST',
+      body: JSON.stringify({ amount: parseFloat(amount), transaction_id: txnId })
+    })
+      .then(r => r.json().then(body => ({ ok: r.ok, body })))
+      .then(({ ok, body }) => {
+        if (!ok) throw new Error(body.error || 'Could not submit payment.');
+        showToast('Payment submitted! Awaiting admin verification.');
+        closePaymentModal();
+        loadPayments();
+      })
+      .catch(e => showToast(e.message, 'error'))
+      .finally(() => { btn.disabled = false; });
   }
 
   /* ── Load member profile from /members API ── */
@@ -576,6 +799,7 @@
     // Load data
     loadProfile(name);
     loadWorkouts();
+    loadPayments();
   });
 </script>
 </body>

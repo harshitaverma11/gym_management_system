@@ -1,5 +1,13 @@
 import psycopg2
 import os
+from psycopg2.extras import RealDictCursor
+from psycopg2.extensions import connection as PsycopgConnection
+
+try:
+    from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
+    load_dotenv()
+except ImportError:
+    pass
 
 # ── PostgreSQL Database Configuration ─────────────────────────────────────────
 # Use DATABASE_URL environment variable for Render, fallback to local dev setup
@@ -7,10 +15,17 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+class GymConnection(PsycopgConnection):
+    def cursor(self, *args, **kwargs):
+        if kwargs.pop("dictionary", False):
+            kwargs.setdefault("cursor_factory", RealDictCursor)
+        return super().cursor(*args, **kwargs)
+
+
 def get_connection():
     """Return a live PostgreSQL connection, or None on failure."""
     try:
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(DATABASE_URL, connection_factory=GymConnection)
         return conn
     except psycopg2.Error as err:
         print(f"[DB] Connection error: {err}")

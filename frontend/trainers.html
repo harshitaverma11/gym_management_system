@@ -177,6 +177,15 @@
         <div class="form-group"><label class="form-label">Phone *</label><input type="tel" id="fPhone" class="form-control" placeholder="9876543210"></div>
         <div class="form-group"><label class="form-label">Email</label><input type="email" id="fEmail" class="form-control" placeholder="trainer@gym.com"></div>
       </div>
+      <div id="loginFields">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Username/Email *</label><input type="text" id="fUsername" class="form-control" placeholder="trainer@gym.com" autocomplete="username"></div>
+          <div class="form-group"><label class="form-label">Password *</label><input type="password" id="fPassword" class="form-control" placeholder="Minimum 6 characters" autocomplete="new-password"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" id="fConfirmPassword" class="form-control" placeholder="Repeat password" autocomplete="new-password"></div>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Experience (yrs)</label><input type="number" id="fExp" class="form-control" placeholder="5"></div>
         <div class="form-group"><label class="form-label">Status</label>
@@ -192,8 +201,9 @@
 
   <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--green);"></i><span id="toastMsg">Done!</span></div>
 
+  <script src="js/config.js"></script>
   <script>
-    const API = 'http://127.0.0.1:5000';
+    const API = window.GYM_API_BASE_URL;
     let allTrainers = [];
 
     function getUser() { try { return JSON.parse(localStorage.getItem('gymUser')) || JSON.parse(localStorage.getItem('currentUser')); } catch { return null; } }
@@ -284,6 +294,10 @@
       document.getElementById('fEmail').value = t ? (t.email || '') : '';
       document.getElementById('fExp').value   = t ? (t.experience || '') : '';
       document.getElementById('fStatus').value= t ? (t.status || 'active') : 'active';
+      document.getElementById('loginFields').style.display = t ? 'none' : 'block';
+      document.getElementById('fUsername').value = '';
+      document.getElementById('fPassword').value = '';
+      document.getElementById('fConfirmPassword').value = '';
       document.getElementById('trainerModal').classList.add('open');
     }
     function closeModal() { document.getElementById('trainerModal').classList.remove('open'); }
@@ -295,6 +309,14 @@
       const name = document.getElementById('fName').value.trim();
       if (!name) { showToast('Trainer name is required', 'error'); return; }
 
+      const username = document.getElementById('fUsername').value.trim();
+      const password = document.getElementById('fPassword').value;
+      const confirmPassword = document.getElementById('fConfirmPassword').value;
+      if (!id && !username) { showToast('Username or email is required', 'error'); return; }
+      if (!id && !password) { showToast('Password is required', 'error'); return; }
+      if (!id && password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+      if (!id && password !== confirmPassword) { showToast('Passwords do not match', 'error'); return; }
+
       const payload = {
         name,
         phone:          document.getElementById('fPhone').value.trim() || '',
@@ -302,6 +324,8 @@
         specialization: document.getElementById('fSpec').value.trim()  || '',
         experience:     document.getElementById('fExp').value          || null,
         status:         document.getElementById('fStatus').value       || 'active',
+        username,
+        password,
       };
 
       const path   = id ? '/trainers/' + id : '/trainers';

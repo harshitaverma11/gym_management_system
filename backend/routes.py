@@ -111,6 +111,106 @@ def login():
     })
 
 
+def _parse_member_profile(data):
+    """Validate the shared member profile fields used by both signup and Admin → Add Member."""
+    profile = {
+        "name":              (data.get("name") or data.get("full_name") or "").strip(),
+        "phone":             (data.get("phone") or "").strip(),
+        "gender":            (data.get("gender") or "M")[:1].upper(),
+        "address":           (data.get("address") or "").strip(),
+        "city":              (data.get("city") or "").strip(),
+        "emergency_contact": (data.get("emergency_contact") or "").strip(),
+        "join_date":         data.get("join_date") or None,
+    }
+
+    if not profile["name"]:
+        return None, "Full name is required."
+    if not profile["phone"]:
+        return None, "Phone number is required."
+    if not profile["address"]:
+        return None, "Address is required."
+    if not profile["city"]:
+        return None, "City is required."
+    if not profile["emergency_contact"]:
+        return None, "Emergency contact is required."
+
+    age_raw = data.get("age")
+    try:
+        age = int(age_raw)
+    except (TypeError, ValueError):
+        return None, "A valid age is required."
+    if age < 10 or age > 100:
+        return None, "Age must be between 10 and 100."
+    profile["age"] = age
+
+    return profile, None
+
+
+def signup():
+    data     = request.get_json(force=True, silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
+    confirm_password = data.get("confirm_password") or data.get("confirmPassword") or ""
+
+    if not username or not password:
+        return jsonify({"error": "Username and password are required."}), 400
+    if len(username) < 3 or len(username) > 50:
+        return jsonify({"error": "Username must be between 3 and 50 characters."}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters."}), 400
+    if confirm_password and password != confirm_password:
+        return jsonify({"error": "Passwords do not match."}), 400
+
+    profile, error = _parse_member_profile(data)
+    if error:
+        return jsonify({"error": error}), 400
+
+    conn = None
+    try:
+        conn = db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT 1 FROM users WHERE LOWER(username) = LOWER(%s)", (username,))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "That username/email is already registered."}), 409
+
+        cursor.execute(
+            "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, 'member') RETURNING user_id",
+            (username, generate_password_hash(password))
+        )
+        user_id = cursor.fetchone()[0]
+
+        # Every member account must have a matching row in members so it shows up in Admin → Members.
+        email = username if "@" in username else ""
+        cursor.execute(
+            "INSERT INTO members (name, age, gender, phone, email, address, city, emergency_contact, "
+            "join_date, status, user_id) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,COALESCE(%s,CURRENT_DATE),'active',%s) "
+            "ON CONFLICT (user_id) WHERE user_id IS NOT NULL DO NOTHING",
+            (profile["name"], profile["age"], profile["gender"], profile["phone"], email,
+             profile["address"], profile["city"], profile["emergency_contact"], profile["join_date"], user_id)
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({
+            "message": "Member account created.",
+            "status": "success",
+            "user": {"user_id": user_id, "username": username, "role": "member"}
+        }), 201
+    except Exception as e:
+        if conn:
+            conn.rollback()
+            conn.close()
+        if "duplicate key" in str(e).lower() or "unique" in str(e).lower():
+            return jsonify({"error": "That username is already registered."}), 409
+        logger.error(f"Signup DB error: {e}")
+        return jsonify({"error": "Could not create member account."}), 500
+
+
 def logout():
     user = get_current_user()
     if user:
@@ -124,14 +224,14 @@ def add_user():
     data     = request.get_json(force=True, silent=True) or {}
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
-    role     = (data.get("role") or "member").strip()
+    role     = (data.get("role") or "trainer").strip()
 
     if not username or not password:
         return jsonify({"error": "Username and password are required."}), 400
     if len(password) < 4:
         return jsonify({"error": "Password must be at least 4 characters."}), 400
-    if role not in ("admin", "trainer", "member"):
-        return jsonify({"error": "Role must be admin, trainer, or member."}), 400
+    if role != "trainer":
+        return jsonify({"error": "This endpoint creates trainer accounts only."}), 400
 
     try:
         conn   = db()
@@ -173,37 +273,67 @@ def get_members():
 @role_required("admin")
 def add_member():
     data = request.get_json(force=True, silent=True) or {}
-    name  = (data.get("name") or "").strip()
-    phone = (data.get("phone") or "").strip()
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
+    confirm_password = data.get("confirm_password") or data.get("confirmPassword") or ""
 
-    if not name:
-        return jsonify({"error": "Member name is required."}), 400
-    if not phone:
-        return jsonify({"error": "Phone number is required."}), 400
+    if not username:
+        return jsonify({"error": "Username/email is required."}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters."}), 400
+    if confirm_password and password != confirm_password:
+        return jsonify({"error": "Passwords do not match."}), 400
 
+    profile, error = _parse_member_profile(data)
+    if error:
+        return jsonify({"error": error}), 400
+
+    conn = None
     try:
-        conn   = db()
+        conn = db()
         cursor = conn.cursor()
+
+        cursor.execute("SELECT 1 FROM users WHERE LOWER(username) = LOWER(%s)", (username,))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "That username/email is already used."}), 409
+
         cursor.execute(
-            "INSERT INTO members (name,age,gender,phone,email,address,join_date,status) "
-            "VALUES (%s,%s,%s,%s,%s,%s,NOW(),%s)",
-            (name,
-             data.get("age") or None,
-             (data.get("gender") or "M")[:1].upper(),
-             phone,
-             (data.get("email") or "").strip(),
-             (data.get("address") or "").strip(),
-             data.get("status") or "active")
+            "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, 'member') RETURNING user_id",
+            (username, generate_password_hash(password))
         )
+        user_id = cursor.fetchone()[0]
+
+        email = (data.get("email") or "").strip() or (username if "@" in username else "")
+        cursor.execute(
+            "INSERT INTO members (name, age, gender, phone, email, address, city, emergency_contact, "
+            "join_date, status, user_id) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,COALESCE(%s,CURRENT_DATE),%s,%s) "
+            "RETURNING member_id",
+            (profile["name"], profile["age"], profile["gender"], profile["phone"], email,
+             profile["address"], profile["city"], profile["emergency_contact"], profile["join_date"],
+             data.get("status") or "active", user_id)
+        )
+        new_id = cursor.fetchone()[0]
+
         conn.commit()
-        new_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        logger.info(f"Member added: {name} (id={new_id})")
-        return jsonify({"message": "Member added successfully.", "status": "success", "id": new_id}), 201
+        logger.info(f"Member added: {profile['name']} (id={new_id}, user={user_id})")
+        return jsonify({
+            "message": "Member added with login account.",
+            "status": "success",
+            "id": new_id
+        }), 201
     except Exception as e:
+        if conn:
+            conn.rollback()
+            conn.close()
+        if "duplicate key" in str(e).lower() or "unique" in str(e).lower():
+            return jsonify({"error": "That username/email is already used."}), 409
         logger.error(f"add_member: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Could not create member account."}), 500
 
 
 @login_required
@@ -214,11 +344,16 @@ def update_member(id):
         conn   = db()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE members SET name=%s,age=%s,phone=%s,email=%s,status=%s WHERE member_id=%s",
+            "UPDATE members SET name=%s,age=%s,gender=%s,phone=%s,email=%s,address=%s,"
+            "city=%s,emergency_contact=%s,status=%s WHERE member_id=%s",
             (data.get("name"),
              data.get("age") or None,
+             (data.get("gender") or "M")[:1].upper(),
              data.get("phone"),
              data.get("email") or "",
+             data.get("address") or "",
+             data.get("city") or "",
+             data.get("emergency_contact") or "",
              data.get("status") or "active",
              id)
         )
@@ -273,27 +408,50 @@ def get_trainers():
 def add_trainer():
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("name") or "").strip()
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
     if not name:
         return jsonify({"error": "Trainer name is required."}), 400
+    if not username:
+        return jsonify({"error": "Username or email is required."}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters."}), 400
+
+    conn = None
     try:
-        conn   = db()
+        conn = db()
         cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM users WHERE LOWER(username) = LOWER(%s)", (username,))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "That username/email is already used."}), 409
+
         cursor.execute(
-            "INSERT INTO trainers (name,phone,email,specialization) VALUES (%s,%s,%s,%s)",
+            "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, 'trainer') RETURNING user_id",
+            (username, generate_password_hash(password))
+        )
+        user_id = cursor.fetchone()[0]
+        cursor.execute(
+            "INSERT INTO trainers (name,phone,email,specialization,status) VALUES (%s,%s,%s,%s,%s) RETURNING trainer_id",
             (name,
              (data.get("phone") or "").strip(),
              (data.get("email") or "").strip(),
-             (data.get("specialization") or "").strip())
+             (data.get("specialization") or "").strip(),
+             data.get("status") or "active")
         )
+        trainer_id = cursor.fetchone()[0]
         conn.commit()
-        new_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        logger.info(f"Trainer added: {name} (id={new_id})")
-        return jsonify({"message": "Trainer added.", "status": "success", "id": new_id}), 201
+        logger.info(f"Trainer added: {name} (id={trainer_id}, user={user_id})")
+        return jsonify({"message": "Trainer added with login account.", "status": "success", "id": trainer_id}), 201
     except Exception as e:
+        if conn:
+            conn.rollback()
+            conn.close()
         logger.error(f"add_trainer: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Could not create trainer account and profile."}), 500
 
 
 @login_required
@@ -341,18 +499,48 @@ def delete_trainer(id):
 #  PAYMENTS
 # ══════════════════════════════════════════════════════════════════════════════
 
+PAYMENT_MODES    = ("cash", "online")
+PAYMENT_STATUSES = ("pending", "paid", "rejected")
+
+
+def _own_member_id(cursor, user):
+    """Resolve the member_id linked to the currently logged-in member's account."""
+    cursor.execute("SELECT member_id FROM members WHERE user_id = %s", (user.get("user_id"),))
+    row = cursor.fetchone()
+    return row[0] if row else None
+
+
 @login_required
-@role_required("admin", "trainer")
+@role_required("admin", "trainer", "member")
 def get_payments():
     try:
         conn   = db()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT p.*, m.name AS member_name
-            FROM payments p
-            LEFT JOIN members m ON p.member_id = m.member_id
-            ORDER BY p.payment_date DESC
-        """)
+        user   = get_current_user()
+
+        if user.get("role") == "member":
+            plain = conn.cursor()
+            member_id = _own_member_id(plain, user)
+            plain.close()
+            if not member_id:
+                cursor.close()
+                conn.close()
+                return jsonify([])
+            cursor.execute("""
+                SELECT p.*, m.name AS member_name
+                FROM payments p
+                LEFT JOIN members m ON p.member_id = m.member_id
+                WHERE p.member_id = %s
+                ORDER BY p.payment_date DESC
+            """, (member_id,))
+        else:
+            cursor.execute("""
+                SELECT p.*, m.name AS member_name
+                FROM payments p
+                LEFT JOIN members m ON p.member_id = m.member_id
+                ORDER BY p.payment_date DESC
+            """)
+
         rows = [serialize_row(r) for r in cursor.fetchall()]
         cursor.close()
         conn.close()
@@ -368,27 +556,39 @@ def add_payment():
     data      = request.get_json(force=True, silent=True) or {}
     member_id = data.get("member_id")
     amount    = data.get("amount")
+    mode      = (data.get("method") or data.get("payment_mode") or "cash").strip().lower()
+    status    = (data.get("status") or "paid").strip().lower()
+    txn_id    = (data.get("transaction_id") or "").strip()
 
     if not member_id:
         return jsonify({"error": "Member ID is required."}), 400
     if not amount or float(amount) <= 0:
         return jsonify({"error": "A valid amount is required."}), 400
+    if mode not in PAYMENT_MODES:
+        return jsonify({"error": "Payment mode must be Cash or Online."}), 400
+    if status not in PAYMENT_STATUSES:
+        return jsonify({"error": "Status must be Pending, Paid, or Rejected."}), 400
+    if mode == "online" and not txn_id:
+        return jsonify({"error": "Transaction ID is required for online payments."}), 400
+    if mode == "cash":
+        txn_id = ""
 
     try:
         conn   = db()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO payments (member_id,amount,payment_date,method,status,notes) "
-            "VALUES (%s,%s,%s,%s,%s,%s)",
+            "INSERT INTO payments (member_id,amount,payment_date,method,status,transaction_id,notes) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING payment_id",
             (int(member_id),
              float(amount),
              data.get("date") or None,
-             data.get("method") or "cash",
-             data.get("status") or "paid",
+             mode,
+             status,
+             txn_id,
              data.get("notes") or None)
         )
+        new_id = cursor.fetchone()[0]
         conn.commit()
-        new_id = cursor.lastrowid
         cursor.close()
         conn.close()
         logger.info(f"Payment recorded: member={member_id} amount={amount} (id={new_id})")
@@ -399,20 +599,112 @@ def add_payment():
 
 
 @login_required
+@role_required("member")
+def member_add_payment():
+    """Member submits a UPI transaction reference for an Online payment; always starts Pending."""
+    data   = request.get_json(force=True, silent=True) or {}
+    amount = data.get("amount")
+    txn_id = (data.get("transaction_id") or "").strip()
+
+    if not amount or float(amount) <= 0:
+        return jsonify({"error": "A valid amount is required."}), 400
+    if not txn_id:
+        return jsonify({"error": "UPI transaction/reference ID is required."}), 400
+
+    try:
+        conn   = db()
+        cursor = conn.cursor()
+        member_id = _own_member_id(cursor, get_current_user())
+        if not member_id:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "No member profile linked to this account."}), 400
+
+        cursor.execute(
+            "INSERT INTO payments (member_id,amount,payment_date,method,status,transaction_id,notes) "
+            "VALUES (%s,%s,CURRENT_DATE,'online','pending',%s,%s) RETURNING payment_id",
+            (member_id, float(amount), txn_id, data.get("notes") or None)
+        )
+        new_id = cursor.fetchone()[0]
+        conn.commit()
+        cursor.close()
+        conn.close()
+        logger.info(f"Member payment submitted: member={member_id} amount={amount} (id={new_id})")
+        return jsonify({
+            "message": "Payment submitted for verification.",
+            "status": "success",
+            "id": new_id
+        }), 201
+    except Exception as e:
+        logger.error(f"member_add_payment: {e}")
+        return jsonify({"error": "Could not submit payment."}), 500
+
+
+@login_required
+@role_required("admin")
+def verify_payment(id):
+    """Admin approves or rejects a pending Online payment."""
+    data   = request.get_json(force=True, silent=True) or {}
+    action = (data.get("action") or "").strip().lower()
+
+    if action not in ("approve", "reject"):
+        return jsonify({"error": "Action must be 'approve' or 'reject'."}), 400
+
+    try:
+        conn   = db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT status FROM payments WHERE payment_id=%s", (id,))
+        payment = cursor.fetchone()
+        if not payment:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Payment not found."}), 404
+        if payment["status"] != "pending":
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Only pending payments can be verified."}), 400
+
+        new_status = "paid" if action == "approve" else "rejected"
+        cursor.execute("UPDATE payments SET status=%s WHERE payment_id=%s", (new_status, id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        logger.info(f"Payment {id} verified: {new_status}")
+        return jsonify({"message": f"Payment {new_status}.", "status": "success"})
+    except Exception as e:
+        logger.error(f"verify_payment {id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@login_required
 @role_required("admin")
 def update_payment(id):
-    data = request.get_json(force=True, silent=True) or {}
+    data   = request.get_json(force=True, silent=True) or {}
+    mode   = (data.get("method") or data.get("payment_mode") or "cash").strip().lower()
+    status = (data.get("status") or "paid").strip().lower()
+    txn_id = (data.get("transaction_id") or "").strip()
+
+    if mode not in PAYMENT_MODES:
+        return jsonify({"error": "Payment mode must be Cash or Online."}), 400
+    if status not in PAYMENT_STATUSES:
+        return jsonify({"error": "Status must be Pending, Paid, or Rejected."}), 400
+    if mode == "online" and not txn_id:
+        return jsonify({"error": "Transaction ID is required for online payments."}), 400
+    if mode == "cash":
+        txn_id = ""
+
     try:
         conn   = db()
         cursor = conn.cursor()
         cursor.execute(
             "UPDATE payments SET member_id=%s,amount=%s,payment_date=%s,"
-            "method=%s,status=%s,notes=%s WHERE payment_id=%s",
+            "method=%s,status=%s,transaction_id=%s,notes=%s WHERE payment_id=%s",
             (data.get("member_id"),
              data.get("amount"),
              data.get("date") or None,
-             data.get("method") or "cash",
-             data.get("status") or "paid",
+             mode,
+             status,
+             txn_id,
              data.get("notes") or None,
              id)
         )
@@ -570,7 +862,8 @@ def get_stats():
             "total_workouts":  val("SELECT COUNT(*) FROM workouts"),
             "monthly_revenue": float(val(
                 "SELECT COALESCE(SUM(amount),0) FROM payments "
-                "WHERE status='paid' AND MONTH(payment_date)=MONTH(NOW()) AND YEAR(payment_date)=YEAR(NOW())"
+                "WHERE status='paid' AND payment_date >= DATE_TRUNC('month', CURRENT_DATE) "
+                "AND payment_date < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'"
             )),
             "due_payments":    float(val(
                 "SELECT COALESCE(SUM(amount),0) FROM payments WHERE status IN ('due','pending')"
@@ -812,7 +1105,7 @@ def get_memberships():
         cur.execute("""
             SELECT ms.*, m.name AS member_name, m.phone AS member_phone,
                    p.name AS plan_name, p.duration_days, p.price AS plan_price,
-                   DATEDIFF(ms.end_date, CURDATE()) AS days_remaining
+                     (ms.end_date - CURRENT_DATE) AS days_remaining
             FROM memberships ms
             JOIN members m ON ms.member_id = m.member_id
             JOIN plans   p ON ms.plan_id   = p.plan_id
@@ -892,12 +1185,12 @@ def get_expiring_memberships():
         cur.execute("""
             SELECT ms.*, m.name AS member_name, m.phone AS member_phone,
                    p.name AS plan_name,
-                   DATEDIFF(ms.end_date, CURDATE()) AS days_remaining
+                                     (ms.end_date - CURRENT_DATE) AS days_remaining
             FROM memberships ms
             JOIN members m ON ms.member_id = m.member_id
             JOIN plans   p ON ms.plan_id   = p.plan_id
             WHERE ms.status='active'
-              AND ms.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                            AND ms.end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days'
             ORDER BY ms.end_date ASC
         """)
         rows = [serialize_row(r) for r in cur.fetchall()]
